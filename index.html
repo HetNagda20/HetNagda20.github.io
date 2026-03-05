@@ -992,57 +992,6 @@
             color: var(--text);
         }
 
-        /* ── HIT COUNTER ── */
-        .hit-counter {
-            position: fixed;
-            bottom: 24px;
-            left: calc(var(--sidebar-w) + 20px);
-            z-index: 300;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            padding: 6px 12px;
-            pointer-events: none;
-            opacity: 0;
-            animation: fadeInCounter 0.6s ease 2s forwards;
-        }
-
-        @keyframes fadeInCounter {
-            to {
-                opacity: 1;
-            }
-        }
-
-        .hit-label {
-            font-family: var(--mono);
-            font-size: 9px;
-            color: var(--muted);
-            letter-spacing: 0.14em;
-        }
-
-        .hit-divider {
-            width: 1px;
-            height: 12px;
-            background: var(--border);
-        }
-
-        .hit-count {
-            font-family: var(--mono);
-            font-size: 11px;
-            color: var(--accent);
-            letter-spacing: 0.06em;
-            min-width: 28px;
-        }
-
-        @media(max-width:768px) {
-            .hit-counter {
-                left: 12px;
-                bottom: 16px;
-            }
-        }
-
         /* ── SCROLLBAR ── */
         .page::-webkit-scrollbar {
             width: 4px;
@@ -1157,9 +1106,9 @@
                         <span class="line2">Nagda</span>
                     </h1>
                     <p class="home-desc">
-                        Started building web apps in Mumbai. Spent 1.5 years at Accenture working on enterprise-scale
-                        B2B systems. Now finishing an MS at UIC — diving deep into distributed systems and ML
-                        infrastructure. Next stop: engineering teams that move fast and build things that matter.
+                        Started building web apps in Mumbai. Spent 1.5 years at Accenture shipping production systems at
+                        scale. Now finishing an MS at UIC — diving deep into distributed systems and ML infrastructure.
+                        Next stop: engineering teams that move fast and build things that matter.
                     </p>
                     <div class="home-actions">
                         <a href="#" class="btn btn-accent" onclick="window.goTo('contact');return false">Get in
@@ -1182,16 +1131,20 @@
             </div>
             <div class="home-strip">
                 <div class="strip-stat">
-                    <span class="strip-num">2+</span>
-                    <span class="strip-label">Years Industry Exp</span>
+                    <span class="strip-num">4+</span>
+                    <span class="strip-label">Years Building</span>
                 </div>
                 <div class="strip-stat">
                     <span class="strip-num">10+</span>
-                    <span class="strip-label">Projects on GitHub</span>
+                    <span class="strip-label">Projects Shipped</span>
                 </div>
                 <div class="strip-stat">
-                    <span class="strip-num">4</span>
-                    <span class="strip-label">Internships & Roles</span>
+                    <span class="strip-num">5</span>
+                    <span class="strip-label">Roles & Internships</span>
+                </div>
+                <div class="strip-stat">
+                    <span class="strip-num">93%</span>
+                    <span class="strip-label">Best ML Accuracy</span>
                 </div>
             </div>
         </div>
@@ -1511,13 +1464,12 @@
                 <h2 class="contact-heading">Let's<br>build <em>something.</em></h2>
                 <p class="contact-sub">Targeting distributed systems & backend engineering roles at early-stage startups
                     and established tech companies.</p>
-                <a href="mailto:hetrnagda@gmail.com" class="contact-email-link">
-                    hetrnagda@gmail.com
+                <a href="/cdn-cgi/l/email-protection#7f171a0b0d111e181b1e3f18121e1613511c1012" class="contact-email-link">
+                    <span class="__cf_email__" data-cfemail="056d6071776b64626164456268646c692b666a68">[email&#160;protected]</span>
                     <span>↗ Send email</span>
                 </a>
-
                 <div class="contact-links-row">
-                    <a href="https://www.linkedin.com/in/hetnagda20/" class="contact-link-btn" target="_blank">LinkedIn
+                    <a href="https://www.linkedin.com/in/hetnagda/" class="contact-link-btn" target="_blank">LinkedIn
                         ↗</a>
                     <a href="https://github.com/hetnagda20" class="contact-link-btn" target="_blank">GitHub ↗</a>
                     <a href="Het_Nagda_Resume.pdf" class="contact-link-btn">Resume PDF ↗</a>
@@ -1537,7 +1489,7 @@
         </div>
     </div>
 
-
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
     <script>
         // ── PAGE NAVIGATION ──────────────────────────────────────────────────
         const pages = ['home', 'skills', 'experience', 'projects', 'contact'];
@@ -1584,80 +1536,80 @@
             if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') goTo(Math.max(current - 1, 0));
         });
 
-        // ── SCROLL & SWIPE NAVIGATION ────────────────────────────────────────
-        const EDGE = 40;          // px from edge = "at boundary"
-        const SWIPE_MIN = 60;     // min px swipe to trigger section change
-        let navCooldown = false;  // short cooldown to prevent double-firing
+        // ── SCROLL-TO-SECTION ─────────────────────────────────────────────────
+        // Each .page can scroll internally. When it hits the bottom edge → next section.
+        // When it's at the very top and user scrolls up → prev section.
+
+        const SCROLL_THRESHOLD = 60; // px from edge to trigger
+        let wheelBuffer = 0;
+        let wheelTimer = null;
+        const WHEEL_TRIGGER = 180; // accumulated delta needed
 
         function getActivePage() {
             return document.getElementById('page-' + pages[current]);
         }
+
         function atBottom(el) {
-            return el.scrollHeight - el.scrollTop - el.clientHeight <= EDGE;
+            return el.scrollHeight - el.scrollTop - el.clientHeight < SCROLL_THRESHOLD;
         }
         function atTop(el) {
-            return el.scrollTop <= EDGE;
-        }
-        function tryNav(dir) {
-            if (animating || navCooldown) return;
-            navCooldown = true;
-            setTimeout(() => { navCooldown = false; }, 800);
-            if (dir > 0) goTo(Math.min(current + 1, pages.length - 1));
-            else goTo(Math.max(current - 1, 0));
+            return el.scrollTop < SCROLL_THRESHOLD;
         }
 
-        // ── WHEEL / TRACKPAD ──
-        let wheelAcc = 0, wheelReset = null;
+        // Wheel / trackpad
         window.addEventListener('wheel', e => {
+            if (animating) return;
             const el = getActivePage();
-            const down = e.deltaY > 0;
-            const up = e.deltaY < 0;
+            const goingDown = e.deltaY > 0;
+            const goingUp = e.deltaY < 0;
 
-            if (down && atBottom(el)) wheelAcc += Math.abs(e.deltaY);
-            else if (up && atTop(el)) wheelAcc += Math.abs(e.deltaY);
-            else { wheelAcc = 0; return; }
+            if (goingDown && atBottom(el)) {
+                wheelBuffer += Math.abs(e.deltaY);
+            } else if (goingUp && atTop(el)) {
+                wheelBuffer += Math.abs(e.deltaY);
+            } else {
+                wheelBuffer = 0;
+                return;
+            }
 
-            clearTimeout(wheelReset);
-            wheelReset = setTimeout(() => { wheelAcc = 0; }, 400);
+            clearTimeout(wheelTimer);
+            wheelTimer = setTimeout(() => { wheelBuffer = 0; }, 500);
 
-            const threshold = Math.abs(e.deltaY) > 80 ? 80 : 150;
-            if (wheelAcc >= threshold) {
-                wheelAcc = 0;
-                tryNav(down ? 1 : -1);
+            if (wheelBuffer >= WHEEL_TRIGGER) {
+                wheelBuffer = 0;
+                if (goingDown) goTo(Math.min(current + 1, pages.length - 1));
+                else goTo(Math.max(current - 1, 0));
             }
         }, { passive: true });
 
-        // ── TOUCH SWIPE ──
-        let tStartY = 0, tStartX = 0, tScrollStart = 0, tDir = 0;
-
+        // Touch swipe
+        let touchStartY = 0;
+        let touchScrollStart = 0;
         window.addEventListener('touchstart', e => {
-            tStartY = e.touches[0].clientY;
-            tStartX = e.touches[0].clientX;
-            tScrollStart = getActivePage().scrollTop;
-            tDir = 0;
-        }, { passive: true });
-
-        window.addEventListener('touchmove', e => {
-            const dx = e.touches[0].clientX - tStartX;
-            const dy = e.touches[0].clientY - tStartY;
-            if (Math.abs(dy) > Math.abs(dx)) tDir = dy < 0 ? 1 : -1;
+            touchStartY = e.touches[0].clientY;
+            touchScrollStart = getActivePage().scrollTop;
         }, { passive: true });
 
         window.addEventListener('touchend', e => {
-            if (!tDir) return;
+            if (animating) return;
             const el = getActivePage();
-            const dist = Math.abs(e.changedTouches[0].clientY - tStartY);
-            const pageScrolled = Math.abs(el.scrollTop - tScrollStart) > 8;
+            const dy = touchStartY - e.changedTouches[0].clientY;
+            const didScroll = Math.abs(el.scrollTop - touchScrollStart) > 5;
+            if (didScroll) return; // let natural scroll happen
 
-            if (dist < SWIPE_MIN) return;
-
-            if (tDir > 0 && (atBottom(el) || !pageScrolled)) tryNav(1);
-            if (tDir < 0 && (atTop(el) || !pageScrolled)) tryNav(-1);
+            if (dy > 60 && atBottom(el)) goTo(Math.min(current + 1, pages.length - 1));
+            if (dy < -60 && atTop(el)) goTo(Math.max(current - 1, 0));
         }, { passive: true });
 
-        // update scroll hint on internal page scroll
+        // Also detect when user scrolls to bottom naturally
         document.querySelectorAll('.page').forEach(page => {
-            page.addEventListener('scroll', () => { updateScrollHint(); });
+            page.addEventListener('scroll', () => {
+                if (animating) return;
+                updateScrollHint();
+                if (atBottom(page) && page.id === 'page-' + pages[current]) {
+                    // show a subtle nudge — actual trigger via wheel
+                }
+            });
         });
 
         // ── SCROLL HINT ───────────────────────────────────────────────────────
@@ -1678,9 +1630,6 @@
                 drawRadar();
                 animateBars();
             }
-            if (name === 'home') {
-                startTerminal();
-            }
         }
         document.getElementById('progressFill').style.width = (1 / pages.length * 100) + '%';
 
@@ -1695,7 +1644,7 @@
             { t: 'cmd', p: '~ $ ', tx: '_', cursor: true },
         ];
         const tb = document.getElementById('termBody');
-        let tIdx = 0, cIdx = 0, tTimer = null;
+        let tIdx = 0, cIdx = 0;
 
         function renderT(up) {
             tb.innerHTML = '';
@@ -1717,17 +1666,10 @@
             else s.innerHTML = `<span class="${l.cls || ''}">${partial}</span><span class="term-cursor"></span>`;
             tb.appendChild(s);
             cIdx++;
-            if (cIdx < l.tx.length) { tTimer = setTimeout(typeT, l.t === 'cmd' ? 58 : 18); }
-            else { cIdx = 0; tIdx++; if (tIdx < tLines.length) tTimer = setTimeout(typeT, l.t === 'cmd' ? 420 : 160); }
+            if (cIdx < l.tx.length) { setTimeout(typeT, l.t === 'cmd' ? 58 : 18); }
+            else { cIdx = 0; tIdx++; if (tIdx < tLines.length) setTimeout(typeT, l.t === 'cmd' ? 420 : 160); }
         }
-        function startTerminal() {
-            // cancel any in-progress animation
-            clearTimeout(tTimer);
-            tIdx = 0; cIdx = 0;
-            tb.innerHTML = '';
-            tTimer = setTimeout(typeT, 600);
-        }
-        startTerminal();
+        setTimeout(typeT, 600);
 
         // ── D3 RADAR ─────────────────────────────────────────────────────────
         const rdata = [
@@ -1835,37 +1777,15 @@
             });
         }
 
-
         // ── PROJECT EXPAND ───────────────────────────────────────────────────
         function toggleProj(i) {
             var d = document.getElementById('detail-' + i);
             d.classList.toggle('open');
         }
 
-        // ── PAGE VIEW COUNTER ─────────────────────────────────────────────────
-        (async function () {
-            try {
-                const res = await fetch('https://hits.sh/hetnagda20.github.io.json');
-                const data = await res.json();
-                const count = data.total ?? data.count ?? '—';
-                document.getElementById('hitCount').textContent =
-                    Number(count).toLocaleString();
-            } catch (e) {
-                document.getElementById('hitCount').textContent = '—';
-            }
-        })();
-
         // ── EXPOSE GLOBALS ────────────────────────────────────────────────────
         window.goTo = goTo;
         window.toggleProj = toggleProj;
     </script>
-    <!-- PAGE VIEW COUNTER -->
-    <div class="hit-counter" id="hitCounter">
-        <span class="hit-label">VIEWS</span>
-        <span class="hit-divider"></span>
-        <span class="hit-count" id="hitCount">—</span>
-    </div>
-
 </body>
-
 </html>
