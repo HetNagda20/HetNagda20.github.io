@@ -35,4 +35,4 @@ open index.html
 - Email: hetrnagda@gmail.com
 - LinkedIn: [linkedin.com/in/hetnagda](https://www.linkedin.com/in/hetnagda/)
 - GitHub: [github.com/hetnagda20](https://github.com/hetnagda20)
-![Views](https://hits.sh/hetnagda20.github.io.svg)
+- ![Views](https://hits.sh/hetnagda20.github.io.svg)
