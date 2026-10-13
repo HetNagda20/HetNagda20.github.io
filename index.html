@@ -1,1900 +1,772 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Het Nagda</title>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Lora:ital,wght@0,400;0,500;1,400;1,500&family=JetBrains+Mono:wght@300;400;500&display=swap"
-        rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
-
-    <style>
-        *,
-        *::before,
-        *::after {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0
-        }
-
-        :root {
-            --bg: #0d0d0d;
-            --bg2: #111111;
-            --bg3: #161616;
-            --surface: #1a1a1a;
-            --border: #2a2a2a;
-            --text: #e8e4dc;
-            --muted: #6a6560;
-            --accent: #FF6B2B;
-            --accent2: #FFD580;
-            --white: #f5f2ed;
-            --mono: 'JetBrains Mono', monospace;
-            --display: 'Syne', sans-serif;
-            --serif: 'Lora', serif;
-            --sidebar-w: 72px;
-            --transition: 0.55s cubic-bezier(0.76, 0, 0.24, 1);
-        }
-
-        html,
-        body {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background: var(--bg);
-            color: var(--text)
-        }
-
-        /* ── SCROLL HINT ── */
-        .scroll-hint {
-            position: fixed;
-            bottom: 28px;
-            right: 32px;
-            z-index: 300;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-            opacity: 1;
-            transition: opacity 0.4s;
-            pointer-events: none;
-        }
-
-        .scroll-hint.hidden {
-            opacity: 0;
-        }
-
-        .scroll-hint-label {
-            font-family: var(--mono);
-            font-size: 9px;
-            color: var(--muted);
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-        }
-
-        .scroll-hint-arrow {
-            width: 22px;
-            height: 22px;
-            border: 1px solid var(--border);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            animation: bounceDown 1.6s ease infinite;
-        }
-
-        .scroll-hint-arrow svg {
-            width: 10px;
-            height: 10px;
-            fill: none;
-            stroke: var(--muted);
-            stroke-width: 2;
-        }
-
-        @keyframes bounceDown {
-
-            0%,
-            100% {
-                transform: translateY(0)
-            }
-
-            50% {
-                transform: translateY(4px)
-            }
-        }
-
-        /* ── SIDEBAR ── */
-        .sidebar {
-            position: fixed;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: var(--sidebar-w);
-            background: var(--bg2);
-            border-right: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 28px 0;
-            z-index: 200;
-            justify-content: space-between;
-        }
-
-        .sidebar-logo {
-            font-family: var(--mono);
-            font-size: 10px;
-            color: var(--accent);
-            letter-spacing: 0.15em;
-            writing-mode: vertical-rl;
-            text-orientation: mixed;
-            transform: rotate(180deg);
-        }
-
-        .sidebar-nav {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .sidebar-btn {
-            width: 44px;
-            height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            border: none;
-            background: transparent;
-            position: relative;
-            transition: background 0.2s;
-            border-radius: 4px;
-        }
-
-        .sidebar-btn:hover {
-            background: var(--surface);
-        }
-
-        .sidebar-btn.active {
-            background: var(--accent);
-        }
-
-        .sidebar-btn .dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: var(--muted);
-            transition: all 0.2s;
-        }
-
-        .sidebar-btn.active .dot {
-            background: var(--bg);
-            width: 8px;
-            height: 8px;
-        }
-
-        .sidebar-btn:hover:not(.active) .dot {
-            background: var(--text);
-        }
-
-        .sidebar-tooltip {
-            position: absolute;
-            left: calc(100% + 12px);
-            font-family: var(--mono);
-            font-size: 10px;
-            color: var(--text);
-            background: var(--surface);
-            padding: 5px 10px;
-            border: 1px solid var(--border);
-            white-space: nowrap;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.15s;
-            letter-spacing: 0.06em;
-        }
-
-        .sidebar-btn:hover .sidebar-tooltip {
-            opacity: 1;
-        }
-
-        .sidebar-footer {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 14px;
-        }
-
-        .sidebar-socials {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .sidebar-social {
-            font-family: var(--mono);
-            font-size: 9px;
-            color: var(--muted);
-            text-decoration: none;
-            writing-mode: vertical-rl;
-            letter-spacing: 0.1em;
-            transition: color 0.2s;
-        }
-
-        .sidebar-social:hover {
-            color: var(--accent);
-        }
-
-        /* integrated views */
-        .sidebar-views {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-            padding-top: 14px;
-            border-top: 1px solid var(--border);
-            width: 44px;
-        }
-
-        .sv-label {
-            font-family: var(--mono);
-            font-size: 9px;
-            color: var(--muted);
-            letter-spacing: 0.14em;
-            writing-mode: vertical-rl;
-            transform: rotate(180deg);
-            text-transform: uppercase;
-        }
-
-        .sv-count {
-            font-family: var(--display);
-            font-size: 16px;
-            font-weight: 800;
-            color: var(--accent);
-            letter-spacing: 0.02em;
-            writing-mode: vertical-rl;
-            transform: rotate(180deg);
-        }
-
-        /* ── MAIN STAGE ── */
-        .stage {
-            position: fixed;
-            left: var(--sidebar-w);
-            top: 0;
-            right: 0;
-            bottom: 0;
-            overflow: hidden;
-        }
-
-        /* ── PAGES ── */
-        .page {
-            position: absolute;
-            inset: 0;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity var(--transition), transform var(--transition), filter var(--transition);
-            transform: translateY(40px);
-            filter: blur(6px);
-            overflow-y: auto;
-            scroll-behavior: smooth;
-        }
-
-        .page.active {
-            opacity: 1;
-            pointer-events: all;
-            transform: translateY(0);
-            filter: blur(0);
-        }
-
-        .page.exit-up {
-            opacity: 0;
-            transform: translateY(-40px);
-            filter: blur(6px);
-        }
-
-        /* ── PAGE PROGRESS BAR ── */
-        .progress-bar {
-            position: fixed;
-            top: 0;
-            left: var(--sidebar-w);
-            right: 0;
-            height: 2px;
-            background: var(--border);
-            z-index: 250;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: var(--accent);
-            transition: width 0.4s ease;
-        }
-
-        /* ══════════════════════════════════════
-      PAGE 1 · HOME
-    ══════════════════════════════════════ */
-        #page-home {
-            display: grid;
-            grid-template-rows: 1fr auto;
-            min-height: 100vh;
-            padding: 0;
-        }
-
-        .home-main {
-            display: grid;
-            grid-template-columns: 1fr 420px;
-            align-items: center;
-            padding: 80px 80px 40px 60px;
-            gap: 60px;
-        }
-
-        .home-eyebrow {
-            font-family: var(--mono);
-            font-size: 11px;
-            color: var(--accent);
-            letter-spacing: 0.14em;
-            text-transform: uppercase;
-            margin-bottom: 28px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .home-eyebrow::before {
-            content: '';
-            width: 32px;
-            height: 1px;
-            background: var(--accent);
-        }
-
-        .home-name {
-            font-family: var(--display);
-            font-size: clamp(56px, 6.5vw, 96px);
-            font-weight: 800;
-            line-height: 0.95;
-            letter-spacing: -0.02em;
-            color: var(--white);
-            margin-bottom: 32px;
-        }
-
-        .home-name .line2 {
-            color: var(--white);
-            opacity: 0.9;
-        }
-
-        .home-desc {
-            font-family: var(--serif);
-            font-size: 17px;
-            color: var(--muted);
-            line-height: 1.8;
-            max-width: 420px;
-            margin-bottom: 48px;
-            font-style: italic;
-        }
-
-        .home-actions {
-            display: flex;
-            gap: 14px;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            font-family: var(--mono);
-            font-size: 11px;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            padding: 13px 28px;
-            cursor: pointer;
-            text-decoration: none;
-            border: none;
-            transition: all 0.2s;
-            display: inline-block;
-        }
-
-        .btn-accent {
-            background: var(--accent);
-            color: var(--bg);
-        }
-
-        .btn-accent:hover {
-            background: #e85520;
-        }
-
-        .btn-ghost {
-            background: transparent;
-            color: var(--text);
-            border: 1px solid var(--border);
-        }
-
-        .btn-ghost:hover {
-            border-color: var(--text);
-        }
-
-        /* terminal card */
-        .home-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            overflow: hidden;
-        }
-
-        .card-header {
-            background: var(--bg3);
-            padding: 12px 18px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .card-header-dots {
-            display: flex;
-            gap: 6px;
-        }
-
-        .cdot {
-            width: 11px;
-            height: 11px;
-            border-radius: 50%;
-        }
-
-        .cdot-r {
-            background: #ff5f57
-        }
-
-        .cdot-y {
-            background: #febc2e
-        }
-
-        .cdot-g {
-            background: #28c840
-        }
-
-        .card-title {
-            font-family: var(--mono);
-            font-size: 10px;
-            color: var(--muted);
-            margin-left: auto;
-        }
-
-        .term-body {
-            padding: 22px 24px 26px;
-            font-family: var(--mono);
-            font-size: 12.5px;
-            line-height: 2;
-            color: #9a9690;
-            min-height: 260px;
-        }
-
-        .term-prompt {
-            color: #4a9eff;
-        }
-
-        .term-cmd {
-            color: var(--white);
-        }
-
-        .term-out {
-            display: block;
-            padding-left: 0;
-        }
-
-        .term-green {
-            color: var(--accent);
-        }
-
-        .term-yellow {
-            color: var(--accent2);
-        }
-
-        .term-cursor {
-            display: inline-block;
-            width: 7px;
-            height: 13px;
-            background: var(--text);
-            margin-left: 2px;
-            vertical-align: middle;
-            animation: blink 1s step-end infinite;
-        }
-
-        @keyframes blink {
-
-            0%,
-            100% {
-                opacity: 1
-            }
-
-            50% {
-                opacity: 0
-            }
-        }
-
-        /* home footer strip */
-        .home-strip {
-            border-top: 1px solid var(--border);
-            padding: 20px 60px;
-            display: flex;
-            gap: 48px;
-            align-items: center;
-        }
-
-        .strip-stat {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .strip-num {
-            font-family: var(--display);
-            font-size: 28px;
-            font-weight: 700;
-            color: var(--white);
-        }
-
-        .strip-label {
-            font-family: var(--mono);
-            font-size: 10px;
-            color: var(--muted);
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            margin-top: 2px;
-        }
-
-        /* ══════════════════════════════════════
-      PAGE 2 · SKILLS
-    ══════════════════════════════════════ */
-        #page-skills {
-            padding: 70px 60px;
-            min-height: 100vh;
-        }
-
-        .page-header {
-            display: flex;
-            align-items: flex-end;
-            justify-content: space-between;
-            margin-bottom: 60px;
-            padding-bottom: 24px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .page-num {
-            font-family: var(--mono);
-            font-size: 11px;
-            color: var(--muted);
-        }
-
-        .page-title {
-            font-family: var(--display);
-            font-size: clamp(36px, 4.5vw, 60px);
-            font-weight: 800;
-            color: var(--white);
-            letter-spacing: -0.02em;
-            line-height: 1;
-        }
-
-        .page-title span {
-            color: var(--accent);
-        }
-
-        .skills-layout {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 60px;
-            align-items: start;
-        }
-
-        .radar-container {
-            position: relative;
-        }
-
-        .radar-label-box {
-            margin-top: 24px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            justify-content: center;
-        }
-
-        .rl {
-            font-family: var(--mono);
-            font-size: 10px;
-            color: var(--muted);
-            padding: 4px 10px;
-            border: 1px solid var(--border);
-        }
-
-        .skill-groups {
-            display: flex;
-            flex-direction: column;
-            gap: 32px;
-        }
-
-        .skill-group-head {
-            font-family: var(--mono);
-            font-size: 10px;
-            color: var(--accent);
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .skill-group-head::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: var(--border);
-        }
-
-        .skill-bars {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .skill-row {
-            display: grid;
-            grid-template-columns: 130px 1fr 36px;
-            gap: 12px;
-            align-items: center;
-        }
-
-        .skill-name {
-            font-family: var(--mono);
-            font-size: 11px;
-            color: var(--text);
-        }
-
-        .skill-bar-bg {
-            height: 3px;
-            background: var(--border);
-            border-radius: 2px;
-            overflow: hidden;
-        }
-
-        .skill-bar-fill {
-            height: 100%;
-            background: var(--accent);
-            border-radius: 2px;
-            width: 0;
-            transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .skill-pct {
-            font-family: var(--mono);
-            font-size: 10px;
-            color: var(--muted);
-            text-align: right;
-        }
-
-        /* ══════════════════════════════════════
-      PAGE 3 · EXPERIENCE
-    ══════════════════════════════════════ */
-        #page-experience {
-            padding: 70px 60px;
-            min-height: 100vh;
-        }
-
-        .exp-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2px;
-            background: var(--border);
-            margin-top: 0;
-        }
-
-        .exp-card {
-            background: var(--bg);
-            padding: 44px 40px;
-            transition: background 0.25s;
-            cursor: default;
-        }
-
-        .exp-card:hover {
-            background: var(--surface);
-        }
-
-        .exp-date {
-            font-family: var(--mono);
-            font-size: 10px;
-            color: var(--muted);
-            letter-spacing: 0.1em;
-            margin-bottom: 16px;
-            text-transform: uppercase;
-        }
-
-        .exp-role {
-            font-family: var(--display);
-            font-size: 22px;
-            font-weight: 700;
-            color: var(--white);
-            margin-bottom: 4px;
-        }
-
-        .exp-company {
-            font-family: var(--mono);
-            font-size: 12px;
-            color: var(--accent);
-            margin-bottom: 24px;
-        }
-
-        .exp-bullets {
-            list-style: none;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .exp-bullets li {
-            font-size: 13px;
-            color: var(--muted);
-            padding-left: 18px;
-            position: relative;
-            line-height: 1.6;
-        }
-
-        .exp-bullets li::before {
-            content: '→';
-            position: absolute;
-            left: 0;
-            color: var(--border);
-            font-size: 11px;
-            top: 1px;
-        }
-
-        .exp-tag {
-            display: inline-block;
-            margin-top: 20px;
-            font-family: var(--mono);
-            font-size: 10px;
-            color: var(--bg);
-            background: var(--accent);
-            padding: 3px 10px;
-            letter-spacing: 0.06em;
-        }
-
-        .exp-tag.edu {
-            background: var(--accent2);
-        }
-
-        /* ══════════════════════════════════════
-      PAGE 4 · PROJECTS
-    ══════════════════════════════════════ */
-        #page-projects {
-            padding: 70px 60px;
-            min-height: 100vh;
-        }
-
-        .projects-list {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-            background: var(--border);
-        }
-
-        .proj-row {
-            background: var(--bg);
-            display: grid;
-            grid-template-columns: 60px 1fr 200px 140px;
-            align-items: center;
-            gap: 32px;
-            padding: 28px 36px;
-            cursor: pointer;
-            transition: background 0.2s, box-shadow 0.2s;
-            border-left: 3px solid transparent;
-        }
-
-        .proj-row:hover {
-            background: var(--surface);
-            border-left-color: var(--accent);
-            box-shadow: 0 0 20px rgba(255, 107, 43, 0.15);
-        }
-
-        .proj-index {
-            font-family: var(--mono);
-            font-size: 11px;
-            color: var(--muted);
-        }
-
-        .proj-name {
-            font-family: var(--display);
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--white);
-            margin-bottom: 4px;
-        }
-
-        .proj-desc {
-            font-size: 13px;
-            color: var(--muted);
-            line-height: 1.5;
-        }
-
-        .proj-stack {
-            font-family: var(--mono);
-            font-size: 10px;
-            color: var(--muted);
-            line-height: 1.7;
-        }
-
-        .proj-metric {
-            font-family: var(--display);
-            font-size: 24px;
-            font-weight: 800;
-            color: var(--accent);
-            text-align: right;
-        }
-
-        .proj-metric-label {
-            font-family: var(--mono);
-            font-size: 9px;
-            color: var(--muted);
-            text-align: right;
-            margin-top: 2px;
-        }
-
-        /* expanded detail */
-        .proj-detail {
-            display: none;
-            background: var(--surface);
-            padding: 32px 36px 32px calc(60px + 36px + 32px);
-            border-left: 3px solid var(--accent);
-            border-top: 1px solid var(--border);
-        }
-
-        .proj-detail.open {
-            display: block;
-        }
-
-        .proj-detail-list {
-            list-style: none;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .proj-detail-list li {
-            font-size: 13px;
-            color: var(--text);
-            padding-left: 20px;
-            position: relative;
-            line-height: 1.65;
-        }
-
-        .proj-detail-list li::before {
-            content: '◆';
-            position: absolute;
-            left: 0;
-            font-size: 7px;
-            color: var(--accent);
-            top: 5px;
-        }
-
-        .proj-links {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-            flex-wrap: wrap;
-        }
-
-        .proj-link-btn {
-            font-family: var(--mono);
-            font-size: 10px;
-            letter-spacing: 0.06em;
-            text-transform: uppercase;
-            padding: 7px 16px;
-            text-decoration: none;
-            border: 1px solid var(--border);
-            color: var(--muted);
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s;
-        }
-
-        .proj-link-btn:hover {
-            border-color: var(--accent);
-            color: var(--accent);
-        }
-
-        .proj-link-btn svg {
-            width: 11px;
-            height: 11px;
-            fill: none;
-            stroke: currentColor;
-            stroke-width: 2;
-        }
-
-        /* disabled links for missing demos */
-        .proj-link-btn.disabled {
-            opacity: 0.45;
-            cursor: not-allowed;
-            pointer-events: none;
-            border-style: dashed;
-        }
-
-        /* ══════════════════════════════════════
-      PAGE 5 · CONTACT
-    ══════════════════════════════════════ */
-        #page-contact {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 60px;
-        }
-
-        .contact-wrap {
-            max-width: 680px;
-            width: 100%;
-        }
-
-        .contact-availability {
-            font-family: var(--mono);
-            font-size: 11px;
-            color: var(--accent);
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .avail-dot {
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            background: var(--accent);
-            animation: pulse 2s ease infinite;
-        }
-
-        @keyframes pulse {
-
-            0%,
-            100% {
-                opacity: 1;
-                transform: scale(1)
-            }
-
-            50% {
-                opacity: 0.5;
-                transform: scale(1.4)
-            }
-        }
-
-        .contact-heading {
-            font-family: var(--display);
-            font-size: clamp(40px, 5vw, 72px);
-            font-weight: 800;
-            line-height: 1;
-            letter-spacing: -0.02em;
-            color: var(--white);
-            margin-bottom: 16px;
-        }
-
-        .contact-heading em {
-            font-family: var(--serif);
-            font-style: italic;
-            color: var(--accent);
-            font-weight: 400;
-        }
-
-        .contact-sub {
-            font-family: var(--serif);
-            font-style: italic;
-            font-size: 16px;
-            color: var(--muted);
-            margin-bottom: 52px;
-            line-height: 1.7;
-        }
-
-        .contact-email-link {
-            font-family: var(--display);
-            font-size: clamp(18px, 2.5vw, 28px);
-            font-weight: 700;
-            color: var(--white);
-            text-decoration: none;
-            display: block;
-            padding: 22px 28px;
-            border: 1px solid var(--border);
-            transition: all 0.2s;
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .contact-email-link:hover {
-            background: var(--accent);
-            color: var(--bg);
-            border-color: var(--accent);
-        }
-
-        .contact-email-link span {
-            font-family: var(--mono);
-            font-size: 11px;
-            color: inherit;
-        }
-
-        .contact-links-row {
-            display: flex;
-            gap: 16px;
-            flex-wrap: wrap;
-        }
-
-        .contact-link-btn {
-            font-family: var(--mono);
-            font-size: 11px;
-            letter-spacing: 0.06em;
-            text-transform: uppercase;
-            padding: 12px 20px;
-            border: 1px solid var(--border);
-            color: var(--muted);
-            text-decoration: none;
-            transition: all 0.2s;
-            flex: 1;
-            text-align: center;
-            min-width: 180px;
-        }
-
-        .contact-link-btn:hover {
-            border-color: var(--text);
-            color: var(--text);
-        }
-
-        /* ── SCROLLBAR ── */
-        .page::-webkit-scrollbar {
-            width: 4px;
-        }
-
-        .page::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .page::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 2px;
-        }
-
-        /* ── MOBILE ── */
-        @media(max-width:768px) {
-            :root {
-                --sidebar-w: 0px
-            }
-
-            .sidebar {
-                display: none
-            }
-
-            .home-main {
-                grid-template-columns: 1fr;
-                padding: 60px 24px 40px
-            }
-
-            .home-strip {
-                padding: 20px 24px;
-                flex-wrap: wrap;
-                gap: 24px
-            }
-
-            #page-skills,
-            #page-experience,
-            #page-projects,
-            #page-contact {
-                padding: 60px 24px
-            }
-
-            .skills-layout {
-                grid-template-columns: 1fr
-            }
-
-            .exp-grid {
-                grid-template-columns: 1fr
-            }
-
-            .proj-row {
-                grid-template-columns: 40px 1fr;
-                gap: 16px
-            }
-
-            .proj-stack,
-            .proj-metric {
-                display: none
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Het Nagda | Backend &amp; Distributed Systems Engineer</title>
+<meta name="description" content="Het Nagda is a backend and distributed systems engineer in Chicago, building integration platforms, resilient APIs and LLM orchestration systems.">
+<meta name="theme-color" content="#d9f1ef">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230f1f2b'/><text x='16' y='22' text-anchor='middle' font-family='monospace' font-size='14' font-weight='700' fill='%235ea3a3'>HN</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Hanken+Grotesk:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   TOKENS
+   Palette: ink #0f1f2b, deep teal #1f4d5a, sea #5ea3a3, mint
+   #d9f1ef, foam #f4fbfa. Layout concept: the page is a lake seen
+   from the surface. Colour blocks meet at
+   animated waterlines, and the hero holds a small system you can
+   break, over a background that ripples under the cursor.
+   ============================================================ */
+:root{
+  --ink:#0f1f2b; --teal:#1f4d5a; --sea:#5ea3a3; --mint:#d9f1ef; --foam:#f4fbfa;
+  --hl:#5ea3a3; --hl-on:#0f1f2b;
+  --font-display:'Instrument Serif',Georgia,serif;
+  --font-body:'Hanken Grotesk',system-ui,-apple-system,sans-serif;
+  --font-mono:'DM Mono','SFMono-Regular',Menlo,monospace;
+  --hero-a:#eef9f7; --hero-b:#e3f4f2; --hero-c:#d9f1ef; --fx-1:#5ea3a3; --fx-2:#1f4d5a; --fx-3:#f4fbfa;
+  color-scheme: light;
+}
+.on-oat{--bg:#f4fbfa;--fg:#0f1f2b;--muted:#3d5b66;--line:rgba(15,31,43,.14);--line-strong:rgba(15,31,43,.3);--card:#ffffff;--label:#1f4d5a;--hot:#1f4d5a;--hl:#1f4d5a;--hl-on:#f4fbfa}
+.on-sky{--bg:#d9f1ef;--fg:#0f1f2b;--muted:#2c4f5a;--line:rgba(15,31,43,.18);--line-strong:rgba(15,31,43,.36);--card:rgba(255,255,255,.55);--label:#0f1f2b;--hot:#1f4d5a;--hl:#1f4d5a;--hl-on:#f4fbfa}
+.on-lake{--bg:#0f1f2b;--fg:#f4fbfa;--muted:#9bbcbc;--line:rgba(217,241,239,.16);--line-strong:rgba(217,241,239,.34);--card:#173a47;--label:#5ea3a3;--hot:#5ea3a3;--hl:#5ea3a3;--hl-on:#0f1f2b}
+
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--ink);color:var(--ink);font-family:var(--font-body);font-weight:400;line-height:1.65;overflow-x:hidden}
+a{color:inherit}
+button{font:inherit;color:inherit}
+img{display:block;max-width:100%}
+::selection{background:var(--sea);color:var(--ink)}
+h1,h2,h3{font-family:var(--font-display);text-wrap:balance;font-weight:400;letter-spacing:-.015em}
+.tabular{font-variant-numeric:tabular-nums}
+:focus-visible{outline:2px solid var(--hl);outline-offset:3px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+section{position:relative;background:var(--bg);color:var(--fg);padding:clamp(5.5rem,10vh,8rem) max(6vw,16px)}
+.container{max-width:1180px;margin:0 auto}
+.eyebrow{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.16em;color:var(--label);text-transform:uppercase;margin-bottom:1.1rem;display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
+.eyebrow::before{content:'';width:30px;height:1px;background:currentColor}
+.eyebrow .note{color:var(--muted);letter-spacing:.06em}
+h2{font-size:clamp(2.8rem,6vw,5rem);line-height:.98;margin-bottom:1.2rem}
+.section-intro{max-width:560px;color:var(--muted);font-size:1.08rem;margin-bottom:3rem}
+
+.btn{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;padding:.95rem 1.75rem;border-radius:999px;text-decoration:none;display:inline-block;border:1px solid var(--line-strong);color:var(--fg);background:transparent;transition:background .25s,color .25s,border-color .25s,transform .25s}
+.btn:hover{border-color:var(--hl);background:var(--hl);color:var(--hl-on);transform:translateY(-2px)}
+.btn-solid{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+
+/* waterline between colour blocks: previous block's colour, drifting slowly */
+.wave-top{position:absolute;left:0;right:0;top:-1px;height:44px;z-index:3;pointer-events:none;background-repeat:repeat-x;background-size:1200px 100%;animation:drift 46s linear infinite}
+@keyframes drift{to{background-position-x:-1200px}}
+.from-sky{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 44' preserveAspectRatio='none'%3E%3Cpath fill='%23d9f1ef' d='M0 22 C100 4,200 4,300 22 S500 40,600 22 S800 4,900 22 S1100 40,1200 22 V0 H0 Z'/%3E%3C/svg%3E")}
+.from-oat{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 44' preserveAspectRatio='none'%3E%3Cpath fill='%23f4fbfa' d='M0 22 C100 4,200 4,300 22 S500 40,600 22 S800 4,900 22 S1100 40,1200 22 V0 H0 Z'/%3E%3C/svg%3E")}
+.from-lake{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 44' preserveAspectRatio='none'%3E%3Cpath fill='%230f1f2b' d='M0 22 C100 4,200 4,300 22 S500 40,600 22 S800 4,900 22 S1100 40,1200 22 V0 H0 Z'/%3E%3C/svg%3E")}
+@media (prefers-reduced-motion:reduce){.wave-top{animation:none}}
+
+/* ============ NAV ============ */
+nav{position:fixed;top:max(.9rem,env(safe-area-inset-top,0px));left:1.1rem;right:1.1rem;z-index:100;display:flex;justify-content:space-between;align-items:center;padding:.7rem .8rem .7rem 1.5rem;border-radius:999px;background:rgba(244,251,250,.82);border:1px solid rgba(15,31,43,.14);backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);box-shadow:0 10px 30px rgba(15,31,43,.14)}
+.nav-name{font-family:var(--font-display);font-size:1.45rem;line-height:1;text-decoration:none;color:var(--ink)}
+.nav-links{display:flex;gap:1.5rem;list-style:none;align-items:center}
+.nav-links a{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.1em;text-decoration:none;color:#3d5b66;text-transform:uppercase;transition:color .25s}
+.nav-links a:hover{color:#1f4d5a}
+.nav-links .nav-cta{background:var(--ink);color:#f4fbfa;padding:.6rem 1.1rem;border-radius:999px}
+.nav-links .nav-cta:hover{background:#5ea3a3;color:#0f1f2b}
+@media (max-width:860px){.nav-links li:not(:last-child){display:none}}
+
+/* ============ HERO ============ */
+.hero{background:linear-gradient(180deg,var(--hero-a) 0%,var(--hero-b) 55%,var(--hero-c) 100%);min-height:max(100vh,700px);display:grid;grid-template-columns:minmax(0,1.18fr) minmax(0,.82fr);padding:0;overflow:hidden}
+.hero-copy{padding:6.6rem 2rem 2.6rem max(6vw,16px);display:flex;flex-direction:column;justify-content:center;position:relative;z-index:2}
+.hero-role{font-family:var(--font-mono);font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;margin-bottom:1.4rem;display:flex;align-items:center;gap:.7rem;flex-wrap:wrap}
+.hero-role .dot{width:8px;height:8px;border-radius:50%;background:var(--hl);animation:blink 1.8s ease-in-out infinite}
+@keyframes blink{50%{opacity:.25}}
+.hero h1{font-size:clamp(4.8rem,10.6vw,9.6rem);line-height:.8;letter-spacing:-.04em;margin-left:-.04em}
+.hero h1 i{display:block;padding-left:.9em;color:var(--hl)}
+.hero-line{font-family:var(--font-display);font-style:italic;font-size:clamp(1.55rem,2.6vw,2.3rem);line-height:1.18;margin-top:1.3rem;max-width:25ch}
+.hero-sub{margin-top:1rem;max-width:480px;font-size:1.04rem;color:var(--muted);font-weight:450}
+.hero-cta{margin-top:1.4rem;display:flex;gap:.8rem;flex-wrap:wrap}
+
+.hero-bg{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+
+@media (max-width:900px){
+  .hero{grid-template-columns:1fr;min-height:auto}
+  .hero-copy{padding:6.2rem max(6vw,16px) 1.4rem}
+  .chaos{margin:0 max(6vw,16px) 3.5rem}
+}
+@media (prefers-reduced-motion:reduce){.hero-role .dot{animation:none}.hero-bg{display:none}.cnode.hint::after{animation:none}}
+
+/* ---- hero key numbers ---- */
+.hero-stats{margin-top:1.7rem;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid var(--line-strong);max-width:640px}
+.hstat{padding:.95rem .8rem 0 0}
+.hstat + .hstat{padding-left:1rem;border-left:1px solid var(--line)}
+.hstat .n{font-family:var(--font-display);font-size:clamp(1.8rem,2.7vw,2.4rem);line-height:1;font-variant-numeric:tabular-nums}
+.hstat .l{margin-top:.45rem;font-family:var(--font-mono);font-size:.58rem;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;line-height:1.4}
+@media (max-width:560px){.hero-stats{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:1.1rem}.hstat:nth-child(3){padding-left:0;border-left:none}}
+
+/* ============ HERO: system you can break ============ */
+.chaos{position:relative;z-index:2;justify-self:center;align-self:center;margin:5.5rem max(3vw,16px) 2rem 0;width:min(100%,560px);background:rgba(255,255,255,.62);border:1px solid var(--line-strong);border-radius:28px;padding:1.1rem 1.3rem 1rem;box-shadow:0 24px 60px rgba(15,31,43,.14);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.chaos-head{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:.8rem}
+.chaos-k{font-family:var(--font-mono);font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;color:var(--label)}
+.chaos-reset{font-family:var(--font-mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;border:1px solid var(--line-strong);background:transparent;color:var(--fg);border-radius:999px;padding:.35rem .8rem;transition:border-color .2s,color .2s}
+.chaos-reset:hover{border-color:var(--hot);color:var(--hot)}
+.g-top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:.35rem;font-family:var(--font-mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.g-num{font-family:var(--font-display);font-weight:400;font-size:1.9rem;line-height:1;letter-spacing:0;text-transform:none;color:var(--fg);font-variant-numeric:tabular-nums}
+.g-track{height:8px;border-radius:99px;background:var(--line);overflow:hidden}
+.g-track i{display:block;height:100%;border-radius:99px;background:#1f4d5a;transition:width .5s cubic-bezier(.3,.7,.2,1),background .3s}
+.chaos.warn .g-track i{background:#5ea3a3}
+.chaos.bad .g-track i{background:#0f1f2b}
+.cboard{position:relative;height:300px;margin:.4rem 0 .3rem}
+.cboard svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.cedge{stroke:rgba(15,31,43,.3);stroke-width:1.5;vector-effect:non-scaling-stroke;stroke-dasharray:5 5;animation:edgeflow 1.1s linear infinite;transition:stroke .3s,opacity .3s}
+.cedge.dead{opacity:.2;animation:none}
+@keyframes edgeflow{to{stroke-dashoffset:-10}}
+.cnode{position:absolute;transform:translate(-50%,-50%);width:var(--nw,72px);padding:.5rem .3rem;border:1px solid var(--line-strong);border-radius:12px;background:#fff;color:var(--fg);text-align:center;transition:background .25s,color .25s,border-color .25s,transform .2s}
+.cnode b{display:block;font-family:var(--font-display);font-weight:400;font-size:1rem;line-height:1.05}
+.cnode i{display:block;font-style:normal;font-family:var(--font-mono);font-size:.5rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:.2rem}
+button.cnode:hover{border-color:var(--hot);transform:translate(-50%,-50%) translateY(-2px)}
+button.cnode[aria-pressed="true"]{background:#0f1f2b;color:#d9f1ef;border:1px dashed #d9f1ef;outline:1px solid #0f1f2b}
+button.cnode[aria-pressed="true"] i{color:#9bbcbc}
+button.cnode[aria-pressed="true"]::after{content:'\2715';position:absolute;top:-9px;right:-7px;width:20px;height:20px;border-radius:50%;background:#d9f1ef;color:#0f1f2b;font-size:.62rem;display:grid;place-items:center;border:1px solid #0f1f2b}
+.cnode.hint::after{content:'';position:absolute;inset:-6px;border-radius:16px;border:1.5px solid var(--hot);animation:ping 1.8s ease-out infinite;pointer-events:none}
+@keyframes ping{0%{transform:scale(.92);opacity:.9}100%{transform:scale(1.18);opacity:0}}
+.cpk{position:absolute;width:9px;height:9px;border-radius:50%;background:#1f4d5a;transform:translate(-50%,-50%);pointer-events:none;z-index:3}
+.cpk.fail{background:#0f1f2b;box-shadow:0 0 0 3px rgba(15,31,43,.18)}
+.cpk.held{background:#5ea3a3}
+.chaos-msg{border-top:1px solid var(--line);padding-top:.7rem;min-height:5.4rem}
+.chaos-msg b{display:block;font-family:var(--font-display);font-weight:400;font-size:1.35rem;line-height:1.1}
+.chaos-msg p{margin-top:.25rem;font-size:.86rem;color:var(--muted);line-height:1.5}
+.chaos-note{font-family:var(--font-mono);font-size:.54rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:.4rem}
+@media (max-width:900px){.chaos{margin:0 max(6vw,16px) 3rem;width:auto;justify-self:stretch}}
+@media (max-width:520px){.cnode{--nw:60px;padding:.4rem .2rem}.cnode b{font-size:.86rem}.cnode i{font-size:.44rem}.cboard{height:270px}}
+@media (prefers-reduced-motion:reduce){.cedge{animation:none}.cnode,.g-track i{transition:none}}
+
+/* ============ PROJECTS (cards + detail window) ============ */
+.proj-group + .proj-group{margin-top:2.8rem}
+.group-h{display:flex;align-items:center;gap:.9rem;margin-bottom:1rem;font-family:var(--font-mono);font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;color:var(--label)}
+.group-h::after{content:'';flex:1;height:1px;background:var(--line)}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1.4rem;align-items:stretch}
+.cards.two-line{--h3:2.1em;--pl:4.65em}
+.card{position:relative;display:flex;flex-direction:column;min-width:0;border:1px solid var(--line);border-radius:24px;padding:1.5rem 1.5rem 1.2rem;background:linear-gradient(165deg,var(--card),var(--bg) 95%);transition:border-color .25s,transform .25s}
+.card:hover,.card:focus-within{border-color:rgba(94,163,163,.6);transform:translateY(-3px)}
+.card-open{position:absolute;inset:0;z-index:1;border:none;background:transparent;border-radius:24px}
+.card-open:focus-visible{outline:2px solid var(--hl);outline-offset:3px}
+.proj-tag{font-family:var(--font-mono);font-size:.62rem;letter-spacing:.14em;color:var(--hot);text-transform:uppercase;min-height:1.9em}
+.card h3{font-size:1.9rem;line-height:1.05;margin:.35rem 0 .6rem;min-height:var(--h3,0)}
+.pitch{color:var(--muted);font-size:.94rem;line-height:1.55;min-height:var(--pl,3.1em);margin-bottom:.8rem}
+.keys{list-style:none;display:flex;flex-direction:column;gap:.5rem;margin-bottom:1rem;flex:1}
+.keys li{display:flex;gap:.6rem;font-size:.9rem;line-height:1.45}
+.keys li::before{content:'→';color:var(--hot);flex:none}
+.keys b{font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:1rem;min-height:4.4rem;align-content:flex-start}
+.chip{font-family:var(--font-mono);font-size:.58rem;letter-spacing:.05em;padding:.26rem .55rem;border:1px solid var(--line-strong);border-radius:999px;color:var(--muted)}
+.card-foot{display:flex;align-items:center;justify-content:space-between;gap:.8rem;padding-top:.9rem;border-top:1px solid var(--line)}
+.links{display:flex;gap:1rem;flex-wrap:wrap;position:relative;z-index:2}
+.proj-link{font-family:var(--font-mono);font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;text-decoration:underline;text-underline-offset:4px}
+.proj-link:hover{color:var(--hot)}
+.more{font-family:var(--font-mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--hot);white-space:nowrap}
+.card.feature{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:3rem;padding:1.9rem 2rem 1.5rem}
+.card.feature .feat-l,.card.feature .feat-r{display:flex;flex-direction:column;min-width:0}
+.card.feature h3{font-size:3rem;min-height:0;margin-bottom:.8rem}
+.card.feature .pitch{min-height:0;font-size:1.05rem}
+.card.feature .chips{min-height:0;margin-top:auto;margin-bottom:0}
+.card.feature .keys{font-size:1rem;gap:.8rem;flex:1;justify-content:center}
+.card.feature .keys li{font-size:1rem}
+.card.feature .card-foot{grid-column:1/-1;margin-top:1.3rem}
+
+.modal{position:fixed;inset:0;z-index:300;display:grid;place-items:center;padding:1rem}
+.modal[hidden]{display:none}
+.modal-backdrop{position:absolute;inset:0;background:rgba(7,15,22,.7);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.modal-win{position:relative;width:min(560px,100%);max-height:min(88vh,740px);overflow:auto;background:var(--bg);color:var(--fg);border:1px solid var(--line-strong);border-radius:24px;padding:1.8rem 1.8rem 1.6rem;box-shadow:0 30px 80px rgba(0,0,0,.5);animation:modalIn .3s ease both}
+@keyframes modalIn{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}
+.modal-win:focus{outline:none}
+.modal-x{position:absolute;top:.9rem;right:.9rem;width:36px;height:36px;border-radius:50%;border:1px solid var(--line-strong);background:transparent;color:var(--fg);font-size:1.05rem;line-height:1;display:grid;place-items:center;transition:border-color .2s,color .2s}
+.modal-x:hover{border-color:var(--hot);color:var(--hot)}
+.modal-win h3{font-size:2.5rem;line-height:1;margin:.5rem 2.4rem .8rem 0}
+.m-desc{color:var(--muted);font-size:.96rem;margin-bottom:1.1rem}
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6rem;margin-bottom:1.1rem}
+.tile{border:1px solid var(--line);border-radius:14px;padding:.7rem .85rem;background:rgba(244,251,250,.04)}
+.tile b{display:block;font-family:var(--font-display);font-weight:400;font-size:1.9rem;line-height:1;color:var(--hot);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.tile span{display:block;margin-top:.3rem;font-size:.74rem;color:var(--muted);line-height:1.35}
+.m-h{font-family:var(--font-mono);font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:var(--label);margin:0 0 .6rem}
+.m-list{list-style:none;display:flex;flex-direction:column;gap:.5rem;margin-bottom:1.1rem}
+.m-list li{display:flex;gap:.6rem;font-size:.9rem;line-height:1.5}
+.m-list li::before{content:'→';color:var(--hot);flex:none}
+.m-list b{font-weight:600}
+.m-chips{display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:1.3rem}
+.m-links{display:flex;gap:.6rem;flex-wrap:wrap}
+.mlink{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;padding:.75rem 1.2rem;border-radius:999px;border:1px solid var(--line-strong);text-decoration:none;color:var(--fg);transition:background .2s,color .2s,border-color .2s}
+.mlink:hover{border-color:var(--hot);color:var(--hot)}
+.mlink.primary{background:var(--hot);border-color:var(--hot);color:#0f1f2b}
+.mlink.primary:hover{background:var(--fg);border-color:var(--fg);color:#0f1f2b}
+
+@media (max-width:960px){
+  .cards{grid-template-columns:1fr}
+  .card.feature{grid-template-columns:1fr;padding:1.5rem 1.5rem 1.2rem}
+  .card.feature .chips{margin:.2rem 0 1.1rem}
+  .card.feature h3{font-size:2.4rem}
+  .cards.two-line{--h3:0;--pl:0}
+  .card h3,.pitch,.proj-tag,.chips{min-height:0}
+  .card.feature .card-foot{margin-top:1rem}
+}
+@media (prefers-reduced-motion:reduce){.card{transition:none}.modal-win{animation:none}}
+
+/* ============ APPROACH ============ */
+.principles{display:flex;flex-direction:column}
+.principle{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,.65fr);gap:.8rem 3rem;align-items:end;padding:1.7rem 0;border-top:1px solid var(--line-strong);transition:opacity .35s}
+.principle:last-child{border-bottom:1px solid var(--line-strong)}
+.principle h3{font-style:italic;font-size:clamp(2rem,4.4vw,3.7rem);line-height:1.02}
+.principle p{color:var(--muted);font-size:.98rem;font-weight:450;max-width:38ch}
+.principles:hover .principle:not(:hover),.principles:focus-within .principle:not(:focus-within){opacity:.38}
+@media (max-width:760px){.principle{grid-template-columns:1fr}}
+
+/* ============ SKILLS ============ */
+.skill-groups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2.4rem 3.2rem}
+.skill-group.wide{grid-column:1/-1}
+.skill-group h3{font-family:var(--font-mono);font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:var(--label);font-weight:400;margin-bottom:.9rem;padding-bottom:.7rem;border-bottom:1px solid var(--line-strong)}
+.skills-ul{list-style:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:.6rem}
+.skill{position:relative;width:100%;display:flex;flex-direction:column;align-items:center;gap:.55rem;padding:.9rem .4rem .75rem;border:1px solid var(--line);border-radius:16px;background:var(--card);color:var(--muted);transition:transform .2s,border-color .2s,color .2s,background .2s,box-shadow .2s}
+.skill:hover{transform:translateY(-3px);border-color:var(--hot);color:var(--hot);box-shadow:0 10px 24px rgba(15,31,43,.1)}
+.ic{display:grid;place-items:center;width:36px;height:36px}
+.ic svg{width:30px;height:30px;fill:currentColor}
+.ic svg.ln{fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.ic-text{font-family:var(--font-mono);font-weight:500;font-size:.78rem;letter-spacing:.02em;line-height:1;border:1.5px solid currentColor;border-radius:8px;padding:.32rem .38rem}
+.nm{font-size:.78rem;line-height:1.25;color:var(--fg);text-align:center;font-weight:450}
+@media (max-width:900px){.skill-groups{grid-template-columns:1fr}}
+@media (max-width:560px){.skills-ul{grid-template-columns:repeat(auto-fill,minmax(92px,1fr))}}
+@media (prefers-reduced-motion:reduce){.skill{transition:none}}
+
+/* ============ ABOUT ============ */
+.about-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.9fr);gap:4rem;align-items:center}
+.about-copy p{margin-bottom:1.15rem;font-size:1.06rem;color:var(--muted);max-width:56ch}
+.about-copy p b{color:var(--fg);font-weight:500}
+.glance{border:1px solid var(--line-strong);border-radius:24px;padding:1.4rem 1.6rem;background:linear-gradient(165deg,var(--card),rgba(15,31,43,0) 90%)}
+.glance-h{font-family:var(--font-mono);font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;color:var(--label);margin-bottom:.4rem}
+.glance dl{display:flex;flex-direction:column}
+.glance dl > div{display:grid;grid-template-columns:7rem minmax(0,1fr);gap:1rem;padding:.85rem 0;border-top:1px solid var(--line)}
+.glance dl > div:first-child{border-top:none}
+.glance dt{font-family:var(--font-mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding-top:.2rem}
+.glance dd{font-size:.95rem;line-height:1.5}
+@media (max-width:560px){.glance dl > div{grid-template-columns:1fr;gap:.2rem}}
+@media (max-width:900px){.about-grid{grid-template-columns:1fr;gap:2.5rem}}
+
+/* ============ TIMELINE ============ */
+.journey-layout{display:grid;grid-template-columns:36px minmax(0,1fr);gap:2.2rem}
+.pipe-col{position:relative}
+.pipe{position:absolute;left:50%;top:6px;bottom:6px;width:4px;transform:translateX(-50%);background:var(--line);border-radius:999px;overflow:hidden}
+.pipe-fill{position:absolute;left:0;top:0;width:100%;height:0;background:linear-gradient(180deg,#5ea3a3,#1f4d5a);border-radius:999px;transition:height .9s cubic-bezier(.4,0,.2,1)}
+.milestones{display:flex;flex-direction:column;gap:2.6rem}
+.milestone{position:relative}
+.m-dot{position:absolute;left:calc(-2.2rem - 25px);top:.6rem;width:14px;height:14px;border-radius:50%;background:var(--bg);border:3px solid var(--line-strong);transition:border-color .5s ease,background .5s ease,transform .5s cubic-bezier(.3,1.6,.5,1)}
+.milestone.lit .m-dot{border-color:var(--hl);background:var(--hl);transform:scale(1.15)}
+.m-yr{font-family:var(--font-display);font-size:2.2rem;line-height:1;color:var(--hot)}
+.milestone h3{font-size:1.7rem;line-height:1.12;margin:.35rem 0 .25rem}
+.m-where{font-family:var(--font-mono);font-size:.64rem;color:var(--label);letter-spacing:.07em;text-transform:uppercase;margin-bottom:.5rem}
+.milestone p{color:var(--muted);font-size:.97rem;max-width:64ch}
+@media (max-width:600px){.journey-layout{grid-template-columns:24px minmax(0,1fr);gap:1.4rem}.m-dot{left:calc(-1.4rem - 19px)}}
+@media (prefers-reduced-motion:reduce){.pipe-fill,.m-dot{transition:none}}
+
+/* ============ CONTACT ============ */
+.contact{background:linear-gradient(180deg,#d9f1ef 0%,#eaf7f5 100%);text-align:center;padding-bottom:7rem}
+.contact .eyebrow{justify-content:center}
+.contact .eyebrow::before{display:none}
+.contact h2{font-size:clamp(3.4rem,10vw,8.5rem);line-height:.88;letter-spacing:-.035em}
+.contact h2 i{color:var(--hl)}
+.contact .sub{color:var(--muted);max-width:500px;margin:0 auto 2.6rem;font-size:1.1rem;font-weight:450}
+.flow-terminal{max-width:560px;margin:0 auto;background:#0f1f2b;color:#f4fbfa;border-radius:20px;box-shadow:0 24px 50px rgba(15,31,43,.3);overflow:hidden;text-align:left;font-family:var(--font-mono)}
+.ft-head{display:flex;gap:.4rem;padding:.8rem 1rem;border-bottom:1px solid rgba(217,241,239,.14)}
+.ft-head span{width:9px;height:9px;border-radius:50%;background:rgba(217,241,239,.28)}
+.ft-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.95rem 1.2rem;border-bottom:1px solid rgba(217,241,239,.12);font-size:.82rem}
+.ft-row:last-child{border-bottom:none}
+.ft-k{color:#9bbcbc;flex:none;width:4.6rem}
+.ft-v{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;text-align:left}
+.ft-copy{font-family:var(--font-mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:#5ea3a3;background:none;border:1px solid rgba(217,241,239,.3);border-radius:999px;padding:.35rem .7rem;flex:none}
+.ft-copy:hover{border-color:#5ea3a3}
+.contact-links{display:flex;gap:1.1rem;justify-content:center;margin-top:1.8rem;flex-wrap:wrap}
+footer{padding:2rem max(6vw,16px);text-align:center;font-family:var(--font-mono);font-size:.64rem;letter-spacing:.12em;color:#9bbcbc;background:var(--ink)}
+
+</style>
 </head>
-
 <body>
 
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-        <div class="sidebar-logo">HN · 2026</div>
+<nav>
+  <a class="nav-name" href="#top">Het Nagda</a>
+  <ul class="nav-links">
+    <li><a href="#projects">Projects</a></li>
+    <li><a href="#approach">Approach</a></li>
+    <li><a href="#skills">Skills</a></li>
+    <li><a href="#about">About</a></li>
+    <li><a class="nav-cta" href="#reach">Get in touch</a></li>
+  </ul>
+</nav>
 
-        <nav class="sidebar-nav" aria-label="Primary">
-            <button class="sidebar-btn active" data-page="home" aria-label="Home">
-                <div class="dot"></div>
-                <div class="sidebar-tooltip">Home</div>
-            </button>
-            <button class="sidebar-btn" data-page="skills" aria-label="Skills">
-                <div class="dot"></div>
-                <div class="sidebar-tooltip">Skills</div>
-            </button>
-            <button class="sidebar-btn" data-page="experience" aria-label="Experience">
-                <div class="dot"></div>
-                <div class="sidebar-tooltip">Experience</div>
-            </button>
-            <button class="sidebar-btn" data-page="projects" aria-label="Projects">
-                <div class="dot"></div>
-                <div class="sidebar-tooltip">Projects</div>
-            </button>
-            <button class="sidebar-btn" data-page="contact" aria-label="Contact">
-                <div class="dot"></div>
-                <div class="sidebar-tooltip">Contact</div>
-            </button>
-        </nav>
-
-        <div class="sidebar-footer">
-            <div class="sidebar-socials">
-                <a href="https://www.linkedin.com/in/hetnagda20/" class="sidebar-social" target="_blank"
-                    rel="noopener noreferrer">LinkedIn</a>
-                <a href="https://github.com/hetnagda20" class="sidebar-social" target="_blank"
-                    rel="noopener noreferrer">GitHub</a>
-            </div>
-
-            <div class="sidebar-views" title="Total portfolio views">
-                <span class="sv-label">VIEWS</span>
-                <span class="sv-count" id="hitCount">—</span>
-            </div>
-        </div>
-    </aside>
-
-    <!-- PROGRESS -->
-    <div class="progress-bar">
-        <div class="progress-fill" id="progressFill"></div>
+<section class="hero on-sky" id="top">
+  <canvas class="hero-bg" id="heroBg" aria-hidden="true"></canvas>
+  <div class="hero-copy">
+    <div class="hero-role"><span class="dot"></span>Backend &amp; distributed systems engineer · Chicago</div>
+    <h1>Het <i>Nagda</i></h1>
+    <p class="hero-line">Give me something I don't fully understand yet and I won't let go until I do.</p>
+    <p class="hero-sub">Two years building high-throughput integration platforms and resilient APIs. Now building LLM orchestration systems for reliable AI workflows.</p>
+    <div class="hero-cta">
+      <a class="btn btn-solid" href="#reach">Get in touch</a>
+      <a class="btn" href="https://github.com/HetNagda20" target="_blank" rel="noopener">GitHub ↗</a>
+      <a class="btn" href="https://www.linkedin.com/in/hetnagda20" target="_blank" rel="noopener">LinkedIn ↗</a>
     </div>
+      <div class="hero-stats" aria-label="Key numbers">
+        <div class="hstat"><div class="n tabular">30,000+</div><div class="l">events per hour</div></div>
+        <div class="hstat"><div class="n tabular">30+</div><div class="l">partner integrations</div></div>
+        <div class="hstat"><div class="n tabular">+13%</div><div class="l">workflow reliability</div></div>
+        <div class="hstat"><div class="n tabular">50</div><div class="l">passing tests on Teller AI</div></div>
+      </div>
+  </div>
+  <div class="chaos" id="chaos" aria-label="An interactive model of a system you can break">
+    <div class="chaos-head"><span class="chaos-k">A system you can break</span><button class="chaos-reset" id="chaosReset" type="button">Reset</button></div>
+    <div class="g-top"><span>Steady state</span><b class="g-num" id="gNum">100%</b></div>
+    <div class="g-track" aria-hidden="true"><i id="gBar" style="width:100%"></i></div>
+    <div class="cboard" id="cboard"></div>
+    <div class="chaos-msg" aria-live="polite"><b id="cStatus">All healthy</b><p id="cLesson">Click any box to pull its plug, and watch the system respond.</p></div>
+    <p class="chaos-note">A model of how I design for failure, not a real system</p>
+  </div>
+</section>
 
-    <!-- STAGE -->
-    <main class="stage">
+<section class="on-lake" id="projects">
+  <div class="wave-top from-sky" aria-hidden="true"></div>
+  <div class="container">
+    <div class="eyebrow">Projects <span class="note">// click a card for the details</span></div>
+    <h2>Things I've built.</h2>
+    <p class="section-intro">The idea and the key points on each card. Open one for the numbers. Every card links to the code, or to a live demo when there is one.</p>
 
-        <!-- PAGE 1: HOME -->
-        <div class="page active" id="page-home">
-            <div class="home-main">
-                <div>
-                    <div class="home-eyebrow">Available · Chicago, IL · May 2026</div>
-                    <h1 class="home-name">
-                        Het<br>
-                        <span class="line2">Nagda</span>
-                    </h1>
-                    <p class="home-desc">
-                        Started building web apps in Mumbai. Spent 1.5 years at Accenture working on enterprise-scale
-                        B2B systems. Now finishing an MS at UIC — diving deep into distributed systems and ML
-                        infrastructure. Next stop: engineering teams that move fast and build things that matter.
-                    </p>
-                    <div class="home-actions">
-                        <a href="#" class="btn btn-accent" onclick="window.goTo('contact');return false">Get in
-                            touch</a>
-                        <a href="#" class="btn btn-ghost" onclick="window.goTo('projects');return false">View
-                            projects</a>
-                    </div>
-                </div>
-
-                <div class="home-card">
-                    <div class="card-header">
-                        <div class="card-header-dots">
-                            <div class="cdot cdot-r"></div>
-                            <div class="cdot cdot-y"></div>
-                            <div class="cdot cdot-g"></div>
-                        </div>
-                        <span class="card-title">~/het — zsh</span>
-                    </div>
-                    <div class="term-body" id="termBody"></div>
-                </div>
-            </div>
-
-            <div class="home-strip">
-                <div class="strip-stat">
-                    <span class="strip-num">2+</span>
-                    <span class="strip-label">Years Industry Exp</span>
-                </div>
-                <div class="strip-stat">
-                    <span class="strip-num">10+</span>
-                    <span class="strip-label">Projects on GitHub</span>
-                </div>
-                <div class="strip-stat">
-                    <span class="strip-num">4</span>
-                    <span class="strip-label">Internships & Roles</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- PAGE 2: SKILLS -->
-        <div class="page" id="page-skills">
-            <div class="page-header">
-                <div>
-                    <div class="page-num">02 / 05</div>
-                    <h2 class="page-title">Skills &amp; <span>Stack</span></h2>
-                </div>
-            </div>
-
-            <div class="skills-layout">
-                <div class="radar-container">
-                    <svg id="radarSvg" style="width:100%;max-width:380px;display:block"></svg>
-                    <div class="radar-label-box">
-                        <span class="rl">Backend</span><span class="rl">Distributed</span>
-                        <span class="rl">Data Eng</span><span class="rl">Frontend</span>
-                        <span class="rl">ML</span><span class="rl">Cloud</span>
-                    </div>
-                </div>
-
-                <div class="skill-groups" id="skillBarsContainer">
-                    <div>
-                        <div class="skill-group-head">Distributed / Cloud</div>
-                        <div class="skill-bars">
-                            <div class="skill-row"><span class="skill-name">Apache Spark</span>
-                                <div class="skill-bar-bg">
-                                    <div class="skill-bar-fill" data-w="88"></div>
-                                </div><span class="skill-pct">88</span>
-                            </div>
-                            <div class="skill-row"><span class="skill-name">Kafka</span>
-                                <div class="skill-bar-bg">
-                                    <div class="skill-bar-fill" data-w="80"></div>
-                                </div><span class="skill-pct">80</span>
-                            </div>
-                            <div class="skill-row"><span class="skill-name">AWS (EMR/Lambda)</span>
-                                <div class="skill-bar-bg">
-                                    <div class="skill-bar-fill" data-w="82"></div>
-                                </div><span class="skill-pct">82</span>
-                            </div>
-                            <div class="skill-row"><span class="skill-name">Docker / K8s</span>
-                                <div class="skill-bar-bg">
-                                    <div class="skill-bar-fill" data-w="75"></div>
-                                </div><span class="skill-pct">75</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <div class="skill-group-head">Languages</div>
-                        <div class="skill-bars">
-                            <div class="skill-row"><span class="skill-name">Python</span>
-                                <div class="skill-bar-bg">
-                                    <div class="skill-bar-fill" data-w="93"></div>
-                                </div><span class="skill-pct">93</span>
-                            </div>
-                            <div class="skill-row"><span class="skill-name">Scala</span>
-                                <div class="skill-bar-bg">
-                                    <div class="skill-bar-fill" data-w="82"></div>
-                                </div><span class="skill-pct">82</span>
-                            </div>
-                            <div class="skill-row"><span class="skill-name">JavaScript/TS</span>
-                                <div class="skill-bar-bg">
-                                    <div class="skill-bar-fill" data-w="85"></div>
-                                </div><span class="skill-pct">85</span>
-                            </div>
-                            <div class="skill-row"><span class="skill-name">Java / Go</span>
-                                <div class="skill-bar-bg">
-                                    <div class="skill-bar-fill" data-w="70"></div>
-                                </div><span class="skill-pct">70</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <div class="skill-group-head">Frameworks</div>
-                        <div class="skill-bars">
-                            <div class="skill-row"><span class="skill-name">React / D3.js</span>
-                                <div class="skill-bar-bg">
-                                    <div class="skill-bar-fill" data-w="84"></div>
-                                </div><span class="skill-pct">84</span>
-                            </div>
-                            <div class="skill-row"><span class="skill-name">Django / Flask</span>
-                                <div class="skill-bar-bg">
-                                    <div class="skill-bar-fill" data-w="88"></div>
-                                </div><span class="skill-pct">88</span>
-                            </div>
-                            <div class="skill-row"><span class="skill-name">Akka / gRPC</span>
-                                <div class="skill-bar-bg">
-                                    <div class="skill-bar-fill" data-w="78"></div>
-                                </div><span class="skill-pct">78</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- PAGE 3: EXPERIENCE -->
-        <div class="page" id="page-experience">
-            <div class="page-header">
-                <div>
-                    <div class="page-num">03 / 05</div>
-                    <h2 class="page-title">Work &amp; <span>Education</span></h2>
-                </div>
-            </div>
-
-            <div class="exp-grid">
-                <div class="exp-card">
-                    <div class="exp-date">Nov 2022 – Jul 2024</div>
-                    <div class="exp-role">Associate Software Engineer</div>
-                    <div class="exp-company">Accenture · Mumbai, IN</div>
-                    <ul class="exp-bullets">
-                        <li>JS automation pipeline for 10K+ daily B2B transactions — 55% overhead reduction.</li>
-                        <li>Fault-tolerant parsing & validation logic — 30% lower failure rate.</li>
-                        <li>Root-cause analysis on production outages — MTTR down 40%.</li>
-                        <li>Bug remediation across 20+ engineer Agile team — 25% fewer recurring defects.</li>
-                    </ul>
-                    <span class="exp-tag">Full-time</span>
-                </div>
-
-                <div class="exp-card">
-                    <div class="exp-date">Feb 2021 – Apr 2021</div>
-                    <div class="exp-role">Python Developer Intern</div>
-                    <div class="exp-company">Trivia Softwares · Mumbai, IN</div>
-                    <ul class="exp-bullets">
-                        <li>Revamped UI/UX with Django templates — 300+ DAU, 90% shorter onboarding.</li>
-                        <li>DB indexing cut page load times by 25%.</li>
-                        <li>Zero critical bugs across 3 releases via thorough test coverage.</li>
-                    </ul>
-                    <span class="exp-tag">Internship</span>
-                </div>
-
-                <div class="exp-card">
-                    <div class="exp-date">Nov 2019 – Dec 2019</div>
-                    <div class="exp-role">Web Developer Intern</div>
-                    <div class="exp-company">The Side Project Advertising · Mumbai, IN</div>
-                    <ul class="exp-bullets">
-                        <li>Built and launched a responsive website with Bootstrap &amp; HTML — 10% organic traffic
-                            lift.</li>
-                        <li>Enhanced SEO through content structure optimization — additional 10% web traffic increase.
-                        </li>
-                        <li>Designed and implemented software applications per client requirements.</li>
-                    </ul>
-                    <span class="exp-tag">Internship</span>
-                </div>
-
-                <div class="exp-card">
-                    <div class="exp-date">May 2019 – Jul 2019</div>
-                    <div class="exp-role">Website Developer Intern</div>
-                    <div class="exp-company">Shelar Academy · Mumbai, IN</div>
-                    <ul class="exp-bullets">
-                        <li>Built interactive web pages for a coaching center with HTML5, CSS3 &amp; JS — improved
-                            functionality and
-                            usability.</li>
-                        <li>CSS3 transitions and animations delivered a 20% increase in user engagement.</li>
-                        <li>Performance tuning improved navigation speed and streamlined user interactions.</li>
-                    </ul>
-                    <span class="exp-tag">Internship</span>
-                </div>
-
-                <div class="exp-card">
-                    <div class="exp-date">Aug 2024 – May 2026</div>
-                    <div class="exp-role">MS, Computer Science</div>
-                    <div class="exp-company">University of Illinois Chicago</div>
-                    <ul class="exp-bullets">
-                        <li>Distributed Systems · Data Engineering · Machine Learning · Algorithms.</li>
-                        <li>Dimensionality reduction coursework: SVD, PCA, CUR decomposition.</li>
-                    </ul>
-                    <span class="exp-tag edu">Graduate</span>
-                </div>
-
-                <div class="exp-card">
-                    <div class="exp-date">Aug 2018 – May 2022</div>
-                    <div class="exp-role">BE, Computer Engineering</div>
-                    <div class="exp-company">University of Mumbai</div>
-                    <ul class="exp-bullets">
-                        <li>Foundation in algorithms, systems, and web development.</li>
-                    </ul>
-                    <span class="exp-tag edu">Undergraduate</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- PAGE 4: PROJECTS -->
-        <div class="page" id="page-projects">
-            <div class="page-header">
-                <div>
-                    <div class="page-num">04 / 05</div>
-                    <h2 class="page-title">Featured <span>Projects</span></h2>
-                </div>
-                <a href="https://github.com/hetnagda20" target="_blank" rel="noopener noreferrer" class="btn btn-ghost"
-                    style="margin-bottom:24px">View all 10+ on GitHub ↗</a>
-            </div>
-
-            <div class="projects-list">
-                <div class="proj-row" onclick="window.toggleProj(0)">
-                    <div class="proj-index">01</div>
-                    <div class="proj-info">
-                        <div class="proj-name">Distributed LLM Inference Engine</div>
-                        <div class="proj-desc">MapReduce pipeline on AWS EMR for parallel LLM training &amp; serving
-                        </div>
-                    </div>
-                    <div class="proj-stack">Scala · AWS EMR<br>Spark · Akka HTTP · gRPC</div>
-                    <div>
-                        <div class="proj-metric">−89%</div>
-                        <div class="proj-metric-label">processing time</div>
-                    </div>
-                </div>
-
-                <div class="proj-detail" id="detail-0">
-                    <ul class="proj-detail-list">
-                        <li>Architected MapReduce pipeline on AWS EMR with Hadoop for parallel tokenization of a 10GB
-                            corpus, cutting
-                            processing time by 89%.</li>
-                        <li>Designed distributed Spark training across a multi-node cluster using Parameter Averaging
-                            with
-                            DeepLearning4J.</li>
-                        <li>Deployed an Akka HTTP microservice on EC2 with gRPC-Lambda integration, handling concurrent
-                            requests at
-                            sub-200ms latency.</li>
-                    </ul>
-                    <div class="proj-links">
-                        <a href="https://github.com/hetnagda20" target="_blank" rel="noopener noreferrer"
-                            class="proj-link-btn">
-                            <svg viewBox="0 0 24 24">
-                                <path
-                                    d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
-                            </svg>
-                            GitHub
-                        </a>
-                        <a href="#" class="proj-link-btn disabled" aria-disabled="true" title="Demo not available yet">
-                            <svg viewBox="0 0 24 24">
-                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                                <polyline points="15 3 21 3 21 9" />
-                                <line x1="10" y1="14" x2="21" y2="3" />
-                            </svg>
-                            Live Demo
-                        </a>
-                    </div>
-                </div>
-
-                <div class="proj-row" onclick="window.toggleProj(1)">
-                    <div class="proj-index">02</div>
-                    <div class="proj-info">
-                        <div class="proj-name">Cancer Nutrition Analytics Dashboard</div>
-                        <div class="proj-desc">Interactive D3.js visualizations analyzing dietary patterns in 724
-                            patients</div>
-                    </div>
-                    <div class="proj-stack">React · D3.js<br>JavaScript · TopoJSON</div>
-                    <div>
-                        <div class="proj-metric">&lt;100ms</div>
-                        <div class="proj-metric-label">cross-chart response</div>
-                    </div>
-                </div>
-
-                <div class="proj-detail" id="detail-1">
-                    <ul class="proj-detail-list">
-                        <li>Developed an interactive React dashboard with 7 custom D3.js visualizations across 724
-                            patients in 50
-                            states.</li>
-                        <li>Implemented linked filtering with React memoization delivering sub-100ms interactions across
-                            10K+ data
-                            points.</li>
-                        <li>Built radar and parallel coordinate visualizations comparing individual dietary metrics
-                            against national
-                            averages.</li>
-                    </ul>
-                    <div class="proj-links">
-                        <a href="https://github.com/hetnagda20" target="_blank" rel="noopener noreferrer"
-                            class="proj-link-btn">
-                            <svg viewBox="0 0 24 24">
-                                <path
-                                    d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
-                            </svg>
-                            GitHub
-                        </a>
-                        <a href="#" class="proj-link-btn disabled" aria-disabled="true" title="Demo not available yet">
-                            <svg viewBox="0 0 24 24">
-                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                                <polyline points="15 3 21 3 21 9" />
-                                <line x1="10" y1="14" x2="21" y2="3" />
-                            </svg>
-                            Live Demo
-                        </a>
-                    </div>
-                </div>
-
-                <div class="proj-row" onclick="window.toggleProj(2)">
-                    <div class="proj-index">03</div>
-                    <div class="proj-info">
-                        <div class="proj-name">Chicago Energy Performance Navigator</div>
-                        <div class="proj-desc">ML ensemble on 3,500+ buildings for ENERGY STAR score prediction</div>
-                    </div>
-                    <div class="proj-stack">Python · Scikit-learn<br>XGBoost · Streamlit · Folium</div>
-                    <div>
-                        <div class="proj-metric">93%</div>
-                        <div class="proj-metric-label">model accuracy R²</div>
-                    </div>
-                </div>
-
-                <div class="proj-detail" id="detail-2">
-                    <ul class="proj-detail-list">
-                        <li>Trained ensemble ML models (Random Forest, XGBoost, Gradient Boosting) on 3,500+ buildings
-                            achieving
-                            R²=0.93.</li>
-                        <li>Applied K-means clustering to segment 4 building archetypes, projecting 15–20% citywide
-                            energy savings.
-                        </li>
-                        <li>Shipped a Streamlit dashboard processing 25+ energy metrics with geospatial visualizations.
-                        </li>
-                    </ul>
-                    <div class="proj-links">
-                        <a href="https://github.com/hetnagda20" target="_blank" rel="noopener noreferrer"
-                            class="proj-link-btn">
-                            <svg viewBox="0 0 24 24">
-                                <path
-                                    d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
-                            </svg>
-                            GitHub
-                        </a>
-                        <a href="#" class="proj-link-btn disabled" aria-disabled="true" title="Demo not available yet">
-                            <svg viewBox="0 0 24 24">
-                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                                <polyline points="15 3 21 3 21 9" />
-                                <line x1="10" y1="14" x2="21" y2="3" />
-                            </svg>
-                            Live Demo
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- PAGE 5: CONTACT -->
-        <div class="page" id="page-contact">
-            <div class="contact-wrap">
-                <div class="contact-availability">
-                    <div class="avail-dot"></div>
-                    Open to full-time roles · Starting May 2026
-                </div>
-
-                <h2 class="contact-heading">Let's<br>build <em>something.</em></h2>
-                <p class="contact-sub">Targeting distributed systems &amp; backend engineering roles at early-stage
-                    startups and
-                    established tech companies.</p>
-
-                <a href="mailto:hetrnagda@gmail.com" class="contact-email-link">
-                    hetrnagda@gmail.com
-                    <span>↗ Send email</span>
-                </a>
-
-                <div class="contact-links-row">
-                    <a href="https://www.linkedin.com/in/hetnagda20/" class="contact-link-btn" target="_blank"
-                        rel="noopener noreferrer">LinkedIn ↗</a>
-                    <a href="https://github.com/hetnagda20" class="contact-link-btn" target="_blank"
-                        rel="noopener noreferrer">GitHub ↗</a>
-                    <a href="Het_Nagda_Resume.pdf" class="contact-link-btn">Resume PDF ↗</a>
-                </div>
-            </div>
-        </div>
-
-    </main>
-
-    <!-- SCROLL HINT -->
-    <div class="scroll-hint" id="scrollHint">
-        <span class="scroll-hint-label">scroll</span>
-        <div class="scroll-hint-arrow">
-            <svg viewBox="0 0 10 10">
-                <polyline points="2,3 5,7 8,3" />
-            </svg>
-        </div>
+    <div class="proj-group">
+      <div class="group-h">LLM agents</div>
+      <div class="cards"><article class="card feature"><button class="card-open" type="button" data-id="teller" aria-label="Open details for Teller AI"></button><div class="feat-l"><span class="proj-tag">LLM agents · Reliability</span><h3>Teller AI</h3><p class="pitch">Learns a legacy banking screen once, then operates it forever without a model in the loop.</p><div class="chips"><span class="chip">Python</span><span class="chip">Claude API</span><span class="chip">Playwright</span><span class="chip">Ollama</span><span class="chip">FastAPI</span></div></div><div class="feat-r"><ul class="keys"><li><span><b>Claude drives a real browser</b> through Playwright</span></li><li><span><b>Each run becomes a typed, versioned capability</b></span></li><li><span><b>Replays deterministically</b>, with guardrails and human handoff</span></li></ul></div><div class="card-foot"><div class="links"><a class="proj-link" href="https://github.com/HetNagda20/TellerAI" target="_blank" rel="noopener">GitHub ↗</a></div><span class="more" aria-hidden="true">Details ↗</span></div></article></div>
     </div>
+    <div class="proj-group">
+      <div class="group-h">LLM infrastructure series · Parts 1 to 3</div>
+      <div class="cards"><article class="card"><button class="card-open" type="button" data-id="tok" aria-label="Open details for Tokenization Pipeline"></button><span class="proj-tag">Part 1 of 3 · Data pipeline</span><h3>Tokenization Pipeline</h3><p class="pitch">Distributed BPE tokenization and embeddings on Hadoop and AWS EMR.</p><ul class="keys"><li><span><b>Three chained MapReduce jobs</b>, each feeding the next</span></li><li><span><b>CL100K_BASE tokens</b> via JTokkit, ND4J embeddings</span></li><li><span><b>A failed stage halts the chain</b>, so bad data stops there</span></li></ul><div class="chips"><span class="chip">Scala</span><span class="chip">Hadoop</span><span class="chip">AWS EMR</span><span class="chip">JTokkit</span><span class="chip">ND4J</span></div><div class="card-foot"><div class="links"><a class="proj-link" href="https://github.com/HetNagda20/LLM-Tokenization-MapReduce" target="_blank" rel="noopener">GitHub ↗</a><a class="proj-link" href="https://youtu.be/Enmy0wtqePo" target="_blank" rel="noopener">EMR demo ↗</a></div><span class="more" aria-hidden="true">Details ↗</span></div></article><article class="card"><button class="card-open" type="button" data-id="spark" aria-label="Open details for LLM Spark Training"></button><span class="proj-tag">Part 2 of 3 · Distributed training</span><h3>LLM Spark Training</h3><p class="pitch">Distributed neural network training in Spark and DeepLearning4J on AWS EMR.</p><ul class="keys"><li><span><b>Sliding-window datasets</b> built from Part 1’s embeddings</span></li><li><span><b>Parameter averaging</b> across Spark workers</span></li><li><span><b>Reports loss</b>, gradient stats and memory use</span></li></ul><div class="chips"><span class="chip">Scala</span><span class="chip">Apache Spark</span><span class="chip">DeepLearning4J</span><span class="chip">AWS EMR</span></div><div class="card-foot"><div class="links"><a class="proj-link" href="https://github.com/HetNagda20/LLM-Spark-Training" target="_blank" rel="noopener">GitHub ↗</a></div><span class="more" aria-hidden="true">Details ↗</span></div></article><article class="card"><button class="card-open" type="button" data-id="cross" aria-label="Open details for LLM Cross Talk"></button><span class="proj-tag">Part 3 of 3 · Distributed LLM system</span><h3>LLM Cross Talk</h3><p class="pitch">A local Llama3 and Claude on Bedrock take turns, across three Scala microservices.</p><ul class="keys"><li><span><b>Protobuf</b> between EC2 and Lambda, Base64 through API Gateway</span></li><li><span><b>Runs to a user-defined turn limit</b></span></li><li><span><b>Every turn is timestamped</b>, and sessions export to CSV</span></li></ul><div class="chips"><span class="chip">Scala</span><span class="chip">Akka HTTP</span><span class="chip">AWS Lambda</span><span class="chip">Bedrock</span><span class="chip">Ollama</span></div><div class="card-foot"><div class="links"><a class="proj-link" href="https://github.com/HetNagda20/LLM-Cross-Talk" target="_blank" rel="noopener">GitHub ↗</a></div><span class="more" aria-hidden="true">Details ↗</span></div></article></div>
+    </div>
+    <div class="proj-group">
+      <div class="group-h">Data and research</div>
+      <div class="cards two-line"><article class="card"><button class="card-open" type="button" data-id="fair" aria-label="Open details for FairLend Miners"></button><span class="proj-tag">Fairness · Big data</span><h3>FairLend Miners</h3><p class="pitch">A bias audit of 103K Chicago mortgage records, built with a team of three.</p><ul class="keys"><li><span><b>Fairness-aware binning</b> compared with standard binning</span></li><li><span><b>FP-Growth rules</b> on denial patterns</span></li><li><span><b>My part:</b> PySpark K-Means and the Disparate Impact audit</span></li></ul><div class="chips"><span class="chip">Python</span><span class="chip">PySpark</span><span class="chip">FP-Growth</span><span class="chip">K-Means</span></div><div class="card-foot"><div class="links"><a class="proj-link" href="https://github.com/HetNagda20/FairLend-Miners" target="_blank" rel="noopener">GitHub ↗</a><a class="proj-link" href="https://arxiv.org/abs/2606.12435" target="_blank" rel="noopener">Paper ↗</a></div><span class="more" aria-hidden="true">Details ↗</span></div></article><article class="card"><button class="card-open" type="button" data-id="nutri" aria-label="Open details for Cancer Nutrition Dashboard"></button><span class="proj-tag">Visual data science</span><h3>Cancer Nutrition Dashboard</h3><p class="pitch">A React and D3 dashboard linking diet, activity and BMI to cancer outcomes, built for UI Health.</p><ul class="keys"><li><span><b>Seven views cross-filter</b> each other</span></li><li><span><b>NHANES data</b>, collapsed into five 0 to 100 scores</span></li><li><span><b>Synthetic state assignment</b> is labeled in the UI</span></li></ul><div class="chips"><span class="chip">React 18</span><span class="chip">D3.js</span><span class="chip">d3-sankey</span><span class="chip">TopoJSON</span></div><div class="card-foot"><div class="links"><a class="proj-link" href="https://hetnagda20.github.io/Cancer-Nutrition-Analytics-Dashboard/" target="_blank" rel="noopener">Live demo ↗</a><a class="proj-link" href="https://github.com/HetNagda20/Cancer-Nutrition-Analytics-Dashboard" target="_blank" rel="noopener">GitHub ↗</a></div><span class="more" aria-hidden="true">Details ↗</span></div></article><article class="card"><button class="card-open" type="button" data-id="harms" aria-label="Open details for Allocation Harms in LLMs"></button><span class="proj-tag">LLM evaluation</span><h3>Allocation Harms in LLMs</h3><p class="pitch">Benchmarking the RABBI metric for allocational harms in large language models.</p><ul class="keys"><li><span><b>PISA 2022, COMPAS and DREsS</b> datasets</span></li><li><span><b>Llama-2-7b-chat</b> and <b>StableLM-2-Zephyr</b></span></li><li><span>Based on “The Mismeasure of Man and Models”</span></li></ul><div class="chips"><span class="chip">Python</span><span class="chip">Jupyter</span><span class="chip">Llama-2</span><span class="chip">StableLM-2</span></div><div class="card-foot"><div class="links"><a class="proj-link" href="https://github.com/HetNagda20/Allocation-Harms-in-LLMs" target="_blank" rel="noopener">GitHub ↗</a><a class="proj-link" href="https://arxiv.org/abs/2408.01285" target="_blank" rel="noopener">Paper ↗</a></div><span class="more" aria-hidden="true">Details ↗</span></div></article></div>
+    </div>
+  </div>
+</section>
 
-    <script>
-        // ── PAGE NAVIGATION ──────────────────────────────────────────────────
-        const pages = ['home', 'skills', 'experience', 'projects', 'contact'];
-        let current = 0;
-        let animating = false;
+<div class="modal on-lake" id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="mTitle">
+  <div class="modal-backdrop" data-close></div>
+  <div class="modal-win" id="modalWin" tabindex="-1">
+    <button class="modal-x" type="button" id="modalX" aria-label="Close details">✕</button>
+    <div id="mBody"></div>
+  </div>
+</div>
 
-        function goTo(nameOrIndex) {
-            const idx = typeof nameOrIndex === 'number' ? nameOrIndex : pages.indexOf(nameOrIndex);
-            if (idx === current || animating || idx < 0) return;
-            animating = true;
+<section class="on-sky" id="approach">
+  <div class="wave-top from-lake" aria-hidden="true"></div>
+  <div class="container">
+    <div class="eyebrow">Approach <span class="note">// the pattern behind the projects</span></div>
+    <h2>I go where the problem is.</h2>
+    <p class="section-intro">Four habits that show up in everything above, from group projects to production.</p>
+    <div class="principles">
+      <div class="principle" tabindex="0">
+        <h3>I break things until I understand why they broke.</h3>
+        <p>In undergrad I was the teammate who disappeared into trial and error until it worked. Others wrote the report. I wanted to know why it failed.</p>
+      </div>
+      <div class="principle" tabindex="0">
+        <h3>I'd rather build the machine than maintain it.</h3>
+        <p>Accenture taught me production discipline: releases, rollbacks, on-call. The master's was for building systems from the first line.</p>
+      </div>
+      <div class="principle" tabindex="0">
+        <h3>I want to know what's inside the model.</h3>
+        <p>After building the routing layer in LLM Cross Talk, I built the tokenization pipeline to understand what that traffic was actually going to.</p>
+      </div>
+      <div class="principle" tabindex="0">
+        <h3>I rebuild what failed the first nine times.</h3>
+        <p>Persistence is the habit I trust most. The tenth attempt is usually the one that holds.</p>
+      </div>
+    </div>
+  </div>
+</section>
 
-            const old = document.getElementById('page-' + pages[current]);
-            const next = document.getElementById('page-' + pages[idx]);
+<section class="on-oat" id="skills">
+  <div class="wave-top from-sky" aria-hidden="true"></div>
+  <div class="container">
+    <div class="eyebrow">Skills <span class="note">// from my resume and my repos</span></div>
+    <h2>What I build with.</h2>
+    <p class="section-intro">Languages, AI tooling, frameworks, data and cloud, and the practices around them.</p>
+    <div class="skill-groups">
+      <div class="skill-group"><h3>Languages</h3><ul class="skills-ul"><li><div class="skill"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.25.18l.9.2.73.26.59.3.45.32.34.34.25.34.16.33.1.3.04.26.02.2-.01.13V8.5l-.05.63-.13.55-.21.46-.26.38-.3.31-.33.25-.35.19-.35.14-.33.1-.3.07-.26.04-.21.02H8.77l-.69.05-.59.14-.5.22-.41.27-.33.32-.27.35-.2.36-.15.37-.1.35-.07.32-.04.27-.02.21v3.06H3.17l-.21-.03-.28-.07-.32-.12-.35-.18-.36-.26-.36-.36-.35-.46-.32-.59-.28-.73-.21-.88-.14-1.05-.05-1.23.06-1.22.16-1.04.24-.87.32-.71.36-.57.4-.44.42-.33.42-.24.4-.16.36-.1.32-.05.24-.01h.16l.06.01h8.16v-.83H6.18l-.01-2.75-.02-.37.05-.34.11-.31.17-.28.25-.26.31-.23.38-.2.44-.18.51-.15.58-.12.64-.1.71-.06.77-.04.84-.02 1.27.05zm-6.3 1.98l-.23.33-.08.41.08.41.23.34.33.22.41.09.41-.09.33-.22.23-.34.08-.41-.08-.41-.23-.33-.33-.22-.41-.09-.41.09zm13.09 3.95l.28.06.32.12.35.18.36.27.36.35.35.47.32.59.28.73.21.88.14 1.04.05 1.23-.06 1.23-.16 1.04-.24.86-.32.71-.36.57-.4.45-.42.33-.42.24-.4.16-.36.09-.32.05-.24.02-.16-.01h-8.22v.82h5.84l.01 2.76.02.36-.05.34-.11.31-.17.29-.25.25-.31.24-.38.2-.44.17-.51.15-.58.13-.64.09-.71.07-.77.04-.84.01-1.27-.04-1.07-.14-.9-.2-.73-.25-.59-.3-.45-.33-.34-.34-.25-.34-.16-.33-.1-.3-.04-.25-.02-.2.01-.13v-5.34l.05-.64.13-.54.21-.46.26-.38.3-.32.33-.24.35-.2.35-.14.33-.1.3-.06.26-.04.21-.02.13-.01h5.84l.69-.05.59-.14.5-.21.41-.28.33-.32.27-.35.2-.36.15-.36.1-.35.07-.32.04-.28.02-.21V6.07h2.09l.14.01zm-6.47 14.25l-.23.33-.08.41.08.41.23.33.33.23.41.08.41-.08.33-.23.23-.33.08-.41-.08-.41-.23-.33-.33-.23-.41-.08-.41.08z"/></svg></span><span class="nm">Python</span></div></li><li><div class="skill"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4.589 24c4.537 0 13.81-1.516 14.821-3v-5.729c-.957 1.408-10.284 2.912-14.821 2.912V24zM4.589 16.365c4.537 0 13.81-1.516 14.821-3V7.636c-.957 1.408-10.284 2.912-14.821 2.912v5.817zM4.589 8.729c4.537 0 13.81-1.516 14.821-3V0C18.453 1.408 9.126 2.912 4.589 2.912v5.817z"/></svg></span><span class="nm">Scala</span></div></li><li><div class="skill"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M0 0h24v24H0V0zm22.034 18.276c-.175-1.095-.888-2.015-3.003-2.873-.736-.345-1.554-.585-1.797-1.14-.091-.33-.105-.51-.046-.705.15-.646.915-.84 1.515-.66.39.12.75.42.976.9 1.034-.676 1.034-.676 1.755-1.125-.27-.42-.404-.601-.586-.78-.63-.705-1.469-1.065-2.834-1.034l-.705.089c-.676.165-1.32.525-1.71 1.005-1.14 1.291-.811 3.541.569 4.471 1.365 1.02 3.361 1.244 3.616 2.205.24 1.17-.87 1.545-1.966 1.41-.811-.18-1.26-.586-1.755-1.336l-1.83 1.051c.21.48.45.689.81 1.109 1.74 1.756 6.09 1.666 6.871-1.004.029-.09.24-.705.074-1.65l.046.067zm-8.983-7.245h-2.248c0 1.938-.009 3.864-.009 5.805 0 1.232.063 2.363-.138 2.711-.33.689-1.18.601-1.566.48-.396-.196-.597-.466-.83-.855-.063-.105-.11-.196-.127-.196l-1.825 1.125c.305.63.75 1.172 1.324 1.517.855.51 2.004.675 3.207.405.783-.226 1.458-.691 1.811-1.411.51-.93.402-2.07.397-3.346.012-2.054 0-4.109 0-6.179l.004-.056z"/></svg></span><span class="nm">JavaScript</span></div></li><li><div class="skill"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M11.915 0 11.7.215C9.515 2.4 7.47 6.39 6.046 10.483c-1.064 1.024-3.633 2.81-3.711 3.551-.093.87 1.746 2.611 1.55 3.235-.198.625-1.304 1.408-1.014 1.939.1.188.823.011 1.277-.491a13.389 13.389 0 0 0-.017 2.14c.076.906.27 1.668.643 2.232.372.563.956.911 1.667.911.397 0 .727-.114 1.024-.264.298-.149.571-.33.91-.5.68-.34 1.634-.666 3.53-.604 1.903.062 2.872.39 3.559.704.687.314 1.15.664 1.925.664.767 0 1.395-.336 1.807-.9.412-.563.631-1.33.72-2.24.06-.623.055-1.32 0-2.066.454.45 1.117.604 1.213.424.29-.53-.816-1.314-1.013-1.937-.198-.624 1.642-2.366 1.549-3.236-.08-.748-2.707-2.568-3.748-3.586C16.428 6.374 14.308 2.394 12.13.215zm.175 6.038a2.95 2.95 0 0 1 2.943 2.942 2.95 2.95 0 0 1-2.943 2.943A2.95 2.95 0 0 1 9.148 8.98a2.95 2.95 0 0 1 2.942-2.942zM8.685 7.983a3.515 3.515 0 0 0-.145.997c0 1.951 1.6 3.55 3.55 3.55 1.95 0 3.55-1.598 3.55-3.55 0-.329-.046-.648-.132-.951.334.095.64.208.915.336a42.699 42.699 0 0 1 2.042 5.829c.678 2.545 1.01 4.92.846 6.607-.082.844-.29 1.51-.606 1.94-.315.431-.713.651-1.315.651-.593 0-.932-.27-1.673-.61-.741-.338-1.825-.694-3.792-.758-1.974-.064-3.073.293-3.821.669-.375.188-.659.373-.911.5s-.466.2-.752.2c-.53 0-.876-.209-1.16-.64-.285-.43-.474-1.101-.545-1.948-.141-1.693.176-4.069.823-6.614a43.155 43.155 0 0 1 1.934-5.783c.348-.167.749-.31 1.192-.425zm-3.382 4.362a.216.216 0 0 1 .13.031c-.166.56-.323 1.116-.463 1.665a33.849 33.849 0 0 0-.547 2.555 3.9 3.9 0 0 0-.2-.39c-.58-1.012-.914-1.642-1.16-2.08.315-.24 1.679-1.755 2.24-1.781zm13.394.01c.562.027 1.926 1.543 2.24 1.783-.246.438-.58 1.068-1.16 2.08a4.428 4.428 0 0 0-.163.309 32.354 32.354 0 0 0-.562-2.49 40.579 40.579 0 0 0-.482-1.652.216.216 0 0 1 .127-.03z"/></svg></span><span class="nm">Java</span></div></li><li><div class="skill"><span class="ic"><span class="ic-text">SQL</span></span><span class="nm">SQL</span></div></li><li><div class="skill"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M22.394 6c-.167-.29-.398-.543-.652-.69L12.926.22c-.509-.294-1.34-.294-1.848 0L2.26 5.31c-.508.293-.923 1.013-.923 1.6v10.18c0 .294.104.62.271.91.167.29.398.543.652.69l8.816 5.09c.508.293 1.34.293 1.848 0l8.816-5.09c.254-.147.485-.4.652-.69.167-.29.27-.616.27-.91V6.91c.003-.294-.1-.62-.268-.91zM12 19.11c-3.92 0-7.109-3.19-7.109-7.11 0-3.92 3.19-7.11 7.11-7.11a7.133 7.133 0 016.156 3.553l-3.076 1.78a3.567 3.567 0 00-3.08-1.78A3.56 3.56 0 008.444 12 3.56 3.56 0 0012 15.555a3.57 3.57 0 003.08-1.778l3.078 1.78A7.135 7.135 0 0112 19.11zm7.11-6.715h-.79v.79h-.79v-.79h-.79v-.79h.79v-.79h.79v.79h.79zm2.962 0h-.79v.79h-.79v-.79h-.79v-.79h.79v-.79h.79v.79h.79z"/></svg></span><span class="nm">C++</span></div></li></ul></div>
+      <div class="skill-group"><h3>AI and LLM tooling</h3><ul class="skills-ul"><li><div class="skill"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m4.7144 15.9555 4.7174-2.6471.079-.2307-.079-.1275h-.2307l-.7893-.0486-2.6956-.0729-2.3375-.0971-2.2646-.1214-.5707-.1215-.5343-.7042.0546-.3522.4797-.3218.686.0608 1.5179.1032 2.2767.1578 1.6514.0972 2.4468.255h.3886l.0546-.1579-.1336-.0971-.1032-.0972L6.973 9.8356l-2.55-1.6879-1.3356-.9714-.7225-.4918-.3643-.4614-.1578-1.0078.6557-.7225.8803.0607.2246.0607.8925.686 1.9064 1.4754 2.4893 1.8336.3643.3035.1457-.1032.0182-.0728-.164-.2733-1.3539-2.4467-1.445-2.4893-.6435-1.032-.17-.6194c-.0607-.255-.1032-.4674-.1032-.7285L6.287.1335 6.6997 0l.9957.1336.419.3642.6192 1.4147 1.0018 2.2282 1.5543 3.0296.4553.8985.2429.8318.091.255h.1579v-.1457l.1275-1.706.2368-2.0947.2307-2.6957.0789-.7589.3764-.9107.7468-.4918.5828.2793.4797.686-.0668.4433-.2853 1.8517-.5586 2.9021-.3643 1.9429h.2125l.2429-.2429.9835-1.3053 1.6514-2.0643.7286-.8196.85-.9046.5464-.4311h1.0321l.759 1.1293-.34 1.1657-1.0625 1.3478-.8804 1.1414-1.2628 1.7-.7893 1.36.0729.1093.1882-.0183 2.8535-.607 1.5421-.2794 1.8396-.3157.8318.3886.091.3946-.3278.8075-1.967.4857-2.3072.4614-3.4364.8136-.0425.0304.0486.0607 1.5482.1457.6618.0364h1.621l3.0175.2247.7892.522.4736.6376-.079.4857-1.2142.6193-1.6393-.3886-3.825-.9107-1.3113-.3279h-.1822v.1093l1.0929 1.0686 2.0035 1.8092 2.5075 2.3314.1275.5768-.3218.4554-.34-.0486-2.2039-1.6575-.85-.7468-1.9246-1.621h-.1275v.17l.4432.6496 2.3436 3.5214.1214 1.0807-.17.3521-.6071.2125-.6679-.1214-1.3721-1.9246L14.38 17.959l-1.1414-1.9428-.1397.079-.674 7.2552-.3156.3703-.7286.2793-.6071-.4614-.3218-.7468.3218-1.4753.3886-1.9246.3157-1.53.2853-1.9004.17-.6314-.0121-.0425-.1397.0182-1.4328 1.9672-2.1796 2.9446-1.7243 1.8456-.4128.164-.7164-.3704.0667-.6618.4008-.5889 2.386-3.0357 1.4389-1.882.929-1.0868-.0062-.1579h-.0546l-6.3385 4.1164-1.1293.1457-.4857-.4554.0608-.7467.2307-.2429 1.9064-1.3114Z"/></svg></span><span class="nm">Claude API</span></div></li><li><div class="skill"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M16.361 10.26a.894.894 0 0 0-.558.47l-.072.148.001.207c0 .193.004.217.059.353.076.193.152.312.291.448.24.238.51.3.872.205a.86.86 0 0 0 .517-.436.752.752 0 0 0 .08-.498c-.064-.453-.33-.782-.724-.897a1.06 1.06 0 0 0-.466 0zm-9.203.005c-.305.096-.533.32-.65.639a1.187 1.187 0 0 0-.06.52c.057.309.31.59.598.667.362.095.632.033.872-.205.14-.136.215-.255.291-.448.055-.136.059-.16.059-.353l.001-.207-.072-.148a.894.894 0 0 0-.565-.472 1.02 1.02 0 0 0-.474.007Zm4.184 2c-.131.071-.223.25-.195.383.031.143.157.288.353.407.105.063.112.072.117.136.004.038-.01.146-.029.243-.02.094-.036.194-.036.222.002.074.07.195.143.253.064.052.076.054.255.059.164.005.198.001.264-.03.169-.082.212-.234.15-.525-.052-.243-.042-.28.087-.355.137-.08.281-.219.324-.314a.365.365 0 0 0-.175-.48.394.394 0 0 0-.181-.033c-.126 0-.207.03-.355.124l-.085.053-.053-.032c-.219-.13-.259-.145-.391-.143a.396.396 0 0 0-.193.032zm.39-2.195c-.373.036-.475.05-.654.086-.291.06-.68.195-.951.328-.94.46-1.589 1.226-1.787 2.114-.04.176-.045.234-.045.53 0 .294.005.357.043.524.264 1.16 1.332 2.017 2.714 2.173.3.033 1.596.033 1.896 0 1.11-.125 2.064-.727 2.493-1.571.114-.226.169-.372.22-.602.039-.167.044-.23.044-.523 0-.297-.005-.355-.045-.531-.288-1.29-1.539-2.304-3.072-2.497a6.873 6.873 0 0 0-.855-.031zm.645.937a3.283 3.283 0 0 1 1.44.514c.223.148.537.458.671.662.166.251.26.508.303.82.02.143.01.251-.043.482-.08.345-.332.705-.672.957a3.115 3.115 0 0 1-.689.348c-.382.122-.632.144-1.525.138-.582-.006-.686-.01-.853-.042-.57-.107-1.022-.334-1.35-.68-.264-.28-.385-.535-.45-.946-.03-.192.025-.509.137-.776.136-.326.488-.73.836-.963.403-.269.934-.46 1.422-.512.187-.02.586-.02.773-.002zm-5.503-11a1.653 1.653 0 0 0-.683.298C5.617.74 5.173 1.666 4.985 2.819c-.07.436-.119 1.04-.119 1.503 0 .544.064 1.24.155 1.721.02.107.031.202.023.208a8.12 8.12 0 0 1-.187.152 5.324 5.324 0 0 0-.949 1.02 5.49 5.49 0 0 0-.94 2.339 6.625 6.625 0 0 0-.023 1.357c.091.78.325 1.438.727 2.04l.13.195-.037.064c-.269.452-.498 1.105-.605 1.732-.084.496-.095.629-.095 1.294 0 .67.009.803.088 1.266.095.555.288 1.143.503 1.534.071.128.243.393.264.407.007.003-.014.067-.046.141a7.405 7.405 0 0 0-.548 1.873c-.062.417-.071.552-.071.991 0 .56.031.832.148 1.279L3.42 24h1.478l-.05-.091c-.297-.552-.325-1.575-.068-2.597.117-.472.25-.819.498-1.296l.148-.29v-.177c0-.165-.003-.184-.057-.293a.915.915 0 0 0-.194-.25 1.74 1.74 0 0 1-.385-.543c-.424-.92-.506-2.286-.208-3.451.124-.486.329-.918.544-1.154a.787.787 0 0 0 .223-.531c0-.195-.07-.355-.224-.522a3.136 3.136 0 0 1-.817-1.729c-.14-.96.114-2.005.69-2.834.563-.814 1.353-1.336 2.237-1.475.199-.033.57-.028.776.01.226.04.367.028.512-.041.179-.085.268-.19.374-.431.093-.215.165-.333.36-.576.234-.29.46-.489.822-.729.413-.27.884-.467 1.352-.561.17-.035.25-.04.569-.04.319 0 .398.005.569.04a4.07 4.07 0 0 1 1.914.997c.117.109.398.457.488.602.034.057.095.177.132.267.105.241.195.346.374.43.14.068.286.082.503.045.343-.058.607-.053.943.016 1.144.23 2.14 1.173 2.581 2.437.385 1.108.276 2.267-.296 3.153-.097.15-.193.27-.333.419-.301.322-.301.722-.001 1.053.493.539.801 1.866.708 3.036-.062.772-.26 1.463-.533 1.854a2.096 2.096 0 0 1-.224.258.916.916 0 0 0-.194.25c-.054.109-.057.128-.057.293v.178l.148.29c.248.476.38.823.498 1.295.253 1.008.231 2.01-.059 2.581a.845.845 0 0 0-.044.098c0 .006.329.009.732.009h.73l.02-.074.036-.134c.019-.076.057-.3.088-.516.029-.217.029-1.016 0-1.258-.11-.875-.295-1.57-.597-2.226-.032-.074-.053-.138-.046-.141.008-.005.057-.074.108-.152.376-.569.607-1.284.724-2.228.031-.26.031-1.378 0-1.628-.083-.645-.182-1.082-.348-1.525a6.083 6.083 0 0 0-.329-.7l-.038-.064.131-.194c.402-.604.636-1.262.727-2.04a6.625 6.625 0 0 0-.024-1.358 5.512 5.512 0 0 0-.939-2.339 5.325 5.325 0 0 0-.95-1.02 8.097 8.097 0 0 1-.186-.152.692.692 0 0 1 .023-.208c.208-1.087.201-2.443-.017-3.503-.19-.924-.535-1.658-.98-2.082-.354-.338-.716-.482-1.15-.455-.996.059-1.8 1.205-2.116 3.01a6.805 6.805 0 0 0-.097.726c0 .036-.007.066-.015.066a.96.96 0 0 1-.149-.078A4.857 4.857 0 0 0 12 3.03c-.832 0-1.687.243-2.456.698a.958.958 0 0 1-.148.078c-.008 0-.015-.03-.015-.066a6.71 6.71 0 0 0-.097-.725C8.997 1.392 8.337.319 7.46.048a2.096 2.096 0 0 0-.585-.041Zm.293 1.402c.248.197.523.759.682 1.388.03.113.06.244.069.292.007.047.026.152.041.233.067.365.098.76.102 1.24l.002.475-.12.175-.118.178h-.278c-.324 0-.646.041-.954.124l-.238.06c-.033.007-.038-.003-.057-.144a8.438 8.438 0 0 1 .016-2.323c.124-.788.413-1.501.696-1.711.067-.05.079-.049.157.013zm9.825-.012c.17.126.358.46.498.888.28.854.36 2.028.212 3.145-.019.14-.024.151-.057.144l-.238-.06a3.693 3.693 0 0 0-.954-.124h-.278l-.119-.178-.119-.175.002-.474c.004-.669.066-1.19.214-1.772.157-.623.434-1.185.68-1.382.078-.062.09-.063.159-.012z"/></svg></span><span class="nm">Ollama</span></div></li><li><div class="skill"><span class="ic"><span class="ic-text">L3</span></span><span class="nm">Llama 3</span></div></li><li><div class="skill"><span class="ic"><span class="ic-text">BR</span></span><span class="nm">AWS Bedrock</span></div></li><li><div class="skill"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m4.7144 15.9555 4.7174-2.6471.079-.2307-.079-.1275h-.2307l-.7893-.0486-2.6956-.0729-2.3375-.0971-2.2646-.1214-.5707-.1215-.5343-.7042.0546-.3522.4797-.3218.686.0608 1.5179.1032 2.2767.1578 1.6514.0972 2.4468.255h.3886l.0546-.1579-.1336-.0971-.1032-.0972L6.973 9.8356l-2.55-1.6879-1.3356-.9714-.7225-.4918-.3643-.4614-.1578-1.0078.6557-.7225.8803.0607.2246.0607.8925.686 1.9064 1.4754 2.4893 1.8336.3643.3035.1457-.1032.0182-.0728-.164-.2733-1.3539-2.4467-1.445-2.4893-.6435-1.032-.17-.6194c-.0607-.255-.1032-.4674-.1032-.7285L6.287.1335 6.6997 0l.9957.1336.419.3642.6192 1.4147 1.0018 2.2282 1.5543 3.0296.4553.8985.2429.8318.091.255h.1579v-.1457l.1275-1.706.2368-2.0947.2307-2.6957.0789-.7589.3764-.9107.7468-.4918.5828.2793.4797.686-.0668.4433-.2853 1.8517-.5586 2.9021-.3643 1.9429h.2125l.2429-.2429.9835-1.3053 1.6514-2.0643.7286-.8196.85-.9046.5464-.4311h1.0321l.759 1.1293-.34 1.1657-1.0625 1.3478-.8804 1.1414-1.2628 1.7-.7893 1.36.0729.1093.1882-.0183 2.8535-.607 1.5421-.2794 1.8396-.3157.8318.3886.091.3946-.3278.8075-1.967.4857-2.3072.4614-3.4364.8136-.0425.0304.0486.0607 1.5482.1457.6618.0364h1.621l3.0175.2247.7892.522.4736.6376-.079.4857-1.2142.6193-1.6393-.3886-3.825-.9107-1.3113-.3279h-.1822v.1093l1.0929 1.0686 2.0035 1.8092 2.5075 2.3314.1275.5768-.3218.4554-.34-.0486-2.2039-1.6575-.85-.7468-1.9246-1.621h-.1275v.17l.4432.6496 2.3436 3.5214.1214 1.0807-.17.3521-.6071.2125-.6679-.1214-1.3721-1.9246L14.38 17.959l-1.1414-1.9428-.1397.079-.674 7.2552-.3156.3703-.7286.2793-.6071-.4614-.3218-.7468.3218-1.4753.3886-1.9246.3157-1.53.2853-1.9004.17-.6314-.0121-.0425-.1397.0182-1.4328 1.9672-2.1796 2.9446-1.7243 1.8456-.4128.164-.7164-.3704.0667-.6618.4008-.5889 2.386-3.0357 1.4389-1.882.929-1.0868-.0062-.1579h-.0546l-6.3385 4.1164-1.1293.1457-.4857-.4554.0608-.7467.2307-.2429 1.9064-1.3114Z"/></svg></span><span class="nm">Claude Code</span></div></li><li><div class="skill"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M11.503.131 1.891 5.678a.84.84 0 0 0-.42.726v11.188c0 .3.162.575.42.724l9.609 5.55a1 1 0 0 0 .998 0l9.61-5.55a.84.84 0 0 0 .42-.724V6.404a.84.84 0 0 0-.42-.726L12.497.131a1.01 1.01 0 0 0-.996 0M2.657 6.338h18.55c.263 0 .43.287.297.515L12.23 22.918c-.062.107-.229.064-.229-.06V12.335a.59.59 0 0 0-.295-.51l-9.11-5.257c-.109-.063-.064-.23.061-.23"/></svg></span><span class="nm">Cursor</span></div></li></ul></div>
+      <div class="skill-group"><h3>Frameworks and libraries</h3><ul class="skills-ul"><li><div class="skill"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m23.693 10.7058-4.73-8.1844c-.4094-.7106-1.4166-1.2942-2.2402-1.2942H7.2725c-.819 0-1.8308.5836-2.2402 1.2942L.307 10.7058c-.4095.7106-.4095 1.873 0 2.5837l4.7252 8.189c.4094.7107 1.4166 1.2943 2.2402 1.2943h9.455c.819 0 1.826-.5836 2.2402-1.2942l4.7252-8.189c.4095-.7107.4095-1.8732 0-2.5838zM10.9763 5.7547c0-.5365.4377-.9742.9742-.9742s.9742.4377.9742.9742v5.8217c0 .5366-.4377.9742-.9742.9742s-.9742-.4376-.9742-.9742zm.9742 12.4294c-3.6427 0-6.6077-2.965-6.6077-6.6077.0047-2.0896.993-4.0521 2.6685-5.304a.8657.8657 0 0 1 1.2142.1788.8657.8657 0 0 1-.1788 1.2143c-2.1602 1.6048-2.612 4.6592-1.0072 6.8194 1.6049 2.1603 4.6593 2.612 6.8195 1.0072 1.2378-.9177 1.9673-2.372 1.9673-3.9157a4.8972 4.8972 0 0 0-1.9861-3.925c-.386-.2824-.466-.8284-.1836-1.2143.2824-.386.8283-.466 1.2143-.1835 1.6895 1.2471 2.6826 3.2238 2.6873 5.3228 0 3.6474-2.965 6.6077-6.6077 6.6077z"/></svg></span><span class="nm">Spring Boot</span></div></li><li><div class="skill"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M11.146 0h3.924v18.166c-2.013.382-3.491.535-5.096.535-4.791 0-7.288-2.166-7.288-6.32 0-4.002 2.65-6.6 6.753-6.6.637 0 1.121.05 1.707.203zm0 9.143a3.894 3.894 0 00-1.325-.204c-1.988 0-3.134 1.223-3.134 3.365 0 2.09 1.096 3.236 3.109 3.236.433 0 .79-.025 1.35-.102V9.142zM21.314 6.06v9.098c0 3.134-.229 4.638-.917 5.937-.637 1.249-1.478 2.039-3.211 2.905l-3.644-1.733c1.733-.815 2.574-1.53 3.109-2.625.561-1.121.739-2.421.739-5.835V6.059h3.924zM17.39.021h3.924v4.026H17.39z"/></svg></span><span class="nm">Django</span></div></li><li><div class="skill"><span class="ic"><span class="ic-text">Akka</span></span><span class="nm">Akka HTTP</span></div></li><li><div class="skill"><span class="ic"><span class="ic-text">PB</span></span><span class="nm">Protobuf</span></div></li><li><div class="skill"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10.812 0c-.425.013-.845.215-1.196.605a3.593 3.593 0 00-.493.722c-.355.667-.425 1.415-.556 2.143a551.9 551.9 0 00-.726 4.087c-.027.16-.096.227-.244.273C5.83 8.386 4.06 8.94 2.3 9.514c-.387.125-.773.289-1.114.506-1.042.665-1.196 1.753-.415 2.71.346.422.79.715 1.284.936 1.1.49 2.202.976 3.3 1.47.019.01.036.013.053.019h-.004l1.306.535c0 .023.002.045 0 .073-.2 2.03-.39 4.063-.58 6.095-.04.419-.012.831.134 1.23.317.87 1.065 1.148 1.881.701.372-.204.666-.497.937-.818 1.372-1.623 2.746-3.244 4.113-4.872.111-.133.205-.15.363-.098.349.117.697.231 1.045.347h.001c.02.012.045.02.073.03l.142.042c1.248.416 2.68.775 3.929 1.19.4.132.622.164 1.045.098.311-.048.592-.062.828-.236.602-.33.995-.957.988-1.682-.005-.427-.154-.813-.35-1.186-.82-1.556-1.637-3.113-2.461-4.666-.078-.148-.076-.243.037-.375 1.381-1.615 2.756-3.236 4.133-4.855.272-.32.513-.658.653-1.058.308-.878-.09-1.57-1-1.741a2.783 2.783 0 00-1.235.069c-1.974.521-3.947 1.041-5.918 1.57-.175.047-.26.015-.355-.144a353.08 353.08 0 00-2.421-4.018 4.61 4.61 0 00-.652-.849c-.371-.37-.802-.549-1.227-.536zm.172 3.703a.592.592 0 01.189.211c.87 1.446 1.742 2.89 2.609 4.338.07.118.135.16.277.121 1.525-.41 3.052-.813 4.579-1.217.367-.098.735-.193 1.103-.289a.399.399 0 01-.1.2c-1.259 1.48-2.516 2.962-3.779 4.438-.11.13-.12.22-.04.37.937 1.803 1.768 3.309 2.498 4.76l-3.696-1.019c-.538-.18-1.077-.358-1.615-.539-.163-.055-.25-.03-.36.1-1.248 1.488-2.504 2.97-3.759 4.454a.398.398 0 01-.18.132c.035-.378.068-.757.104-1.136.149-1.572.297-3.144.451-4.716-.03-.318.117-.405-.322-.545-1.493-.593-3.346-1.321-4.816-1.905a.595.595 0 01.24-.134c1.797-.57 3.595-1.14 5.394-1.705.127-.04.199-.092.211-.233.013-.148.05-.294.076-.441.241-1.363.483-2.726.726-4.088.068-.386.14-.771.21-1.157z"/></svg></span><span class="nm">PySpark</span></div></li><li><div class="skill"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.23 12.004a2.236 2.236 0 0 1-2.235 2.236 2.236 2.236 0 0 1-2.236-2.236 2.236 2.236 0 0 1 2.235-2.236 2.236 2.236 0 0 1 2.236 2.236zm2.648-10.69c-1.346 0-3.107.96-4.888 2.622-1.78-1.653-3.542-2.602-4.887-2.602-.41 0-.783.093-1.106.278-1.375.793-1.683 3.264-.973 6.365C1.98 8.917 0 10.42 0 12.004c0 1.59 1.99 3.097 5.043 4.03-.704 3.113-.39 5.588.988 6.38.32.187.69.275 1.102.275 1.345 0 3.107-.96 4.888-2.624 1.78 1.654 3.542 2.603 4.887 2.603.41 0 .783-.09 1.106-.275 1.374-.792 1.683-3.263.973-6.365C22.02 15.096 24 13.59 24 12.004c0-1.59-1.99-3.097-5.043-4.032.704-3.11.39-5.587-.988-6.38-.318-.184-.688-.277-1.092-.278zm-.005 1.09v.006c.225 0 .406.044.558.127.666.382.955 1.835.73 3.704-.054.46-.142.945-.25 1.44-.96-.236-2.006-.417-3.107-.534-.66-.905-1.345-1.727-2.035-2.447 1.592-1.48 3.087-2.292 4.105-2.295zm-9.77.02c1.012 0 2.514.808 4.11 2.28-.686.72-1.37 1.537-2.02 2.442-1.107.117-2.154.298-3.113.538-.112-.49-.195-.964-.254-1.42-.23-1.868.054-3.32.714-3.707.19-.09.4-.127.563-.132zm4.882 3.05c.455.468.91.992 1.36 1.564-.44-.02-.89-.034-1.345-.034-.46 0-.915.01-1.36.034.44-.572.895-1.096 1.345-1.565zM12 8.1c.74 0 1.477.034 2.202.093.406.582.802 1.203 1.183 1.86.372.64.71 1.29 1.018 1.946-.308.655-.646 1.31-1.013 1.95-.38.66-.773 1.288-1.18 1.87-.728.063-1.466.098-2.21.098-.74 0-1.477-.035-2.202-.093-.406-.582-.802-1.204-1.183-1.86-.372-.64-.71-1.29-1.018-1.946.303-.657.646-1.313 1.013-1.954.38-.66.773-1.286 1.18-1.868.728-.064 1.466-.098 2.21-.098zm-3.635.254c-.24.377-.48.763-.704 1.16-.225.39-.435.782-.635 1.174-.265-.656-.49-1.31-.676-1.947.64-.15 1.315-.283 2.015-.386zm7.26 0c.695.103 1.365.23 2.006.387-.18.632-.405 1.282-.66 1.933-.2-.39-.41-.783-.64-1.174-.225-.392-.465-.774-.705-1.146zm3.063.675c.484.15.944.317 1.375.498 1.732.74 2.852 1.708 2.852 2.476-.005.768-1.125 1.74-2.857 2.475-.42.18-.88.342-1.355.493-.28-.958-.646-1.956-1.1-2.98.45-1.017.81-2.01 1.085-2.964zm-13.395.004c.278.96.645 1.957 1.1 2.98-.45 1.017-.812 2.01-1.086 2.964-.484-.15-.944-.318-1.37-.5-1.732-.737-2.852-1.706-2.852-2.474 0-.768 1.12-1.742 2.852-2.476.42-.18.88-.342 1.356-.494zm11.678 4.28c.265.657.49 1.312.676 1.948-.64.157-1.316.29-2.016.39.24-.375.48-.762.705-1.158.225-.39.435-.788.636-1.18zm-9.945.02c.2.392.41.783.64 1.175.23.39.465.772.705 1.143-.695-.102-1.365-.23-2.006-.386.18-.63.406-1.282.66-1.933zM17.92 16.32c.112.493.2.968.254 1.423.23 1.868-.054 3.32-.714 3.708-.147.09-.338.128-.563.128-1.012 0-2.514-.807-4.11-2.28.686-.72 1.37-1.536 2.02-2.44 1.107-.118 2.154-.3 3.113-.54zm-11.83.01c.96.234 2.006.415 3.107.532.66.905 1.345 1.727 2.035 2.446-1.595 1.483-3.092 2.295-4.11 2.295-.22-.005-.406-.05-.553-.132-.666-.38-.955-1.834-.73-3.703.054-.46.142-.944.25-1.438zm4.56.64c.44.02.89.034 1.345.034.46 0 .915-.01 1.36-.034-.44.572-.895 1.095-1.345 1.565-.455-.47-.91-.993-1.36-1.565z"/></svg></span><span class="nm">React</span></div></li><li><div class="skill"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M13.312 12C13.312 5.718 8.22.625 1.937.625H0v5h1.938c3.521 0 6.375 2.854 6.375 6.375s-2.854 6.375-6.375 6.375H0v5h1.938c6.281 0 11.374-5.093 11.374-11.375zM24 7.563C24 3.731 20.893.625 17.062.625h-8a13.4154 13.4154 0 0 1 4.686 5h3.314c1.069 0 1.938.868 1.938 1.938 0 1.07-.869 1.938-1.938 1.938h-1.938c.313 1.652.313 3.348 0 5h1.938c1.068 0 1.938.867 1.938 1.938s-.869 1.938-1.938 1.938h-3.314a13.4154 13.4154 0 0 1-4.686 5h8c1.621 0 3.191-.568 4.438-1.605 2.943-2.45 3.346-6.824.895-9.77A6.9459 6.9459 0 0 0 24 7.563z"/></svg></span><span class="nm">D3.js</span></div></li><li><div class="skill"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M23.996 7.462c-.056.837-.257 2.135-.716 3.85-.995 3.715-4.27 10.874-10.42 9.227-6.15-1.65-5.407-9.487-4.412-13.201.46-1.716.934-2.94 1.305-3.694.42-.853.846-.289 1.815.523.684.573 2.41 1.791 5.011 2.488 2.601.697 4.706.506 5.583.352 1.245-.219 1.897-.494 1.834.455Zm-9.807 3.863s-.127-1.819-1.773-2.286c-1.644-.467-2.613 1.04-2.613 1.04Zm4.058 4.539-7.769-2.172s.446 2.306 3.338 3.153c2.862.836 4.43-.98 4.43-.981Zm2.701-2.51s-.13-1.818-1.773-2.286c-1.644-.469-2.612 1.038-2.612 1.038ZM8.57 18.23c-4.749 1.279-7.261-4.224-8.021-7.08C.197 9.831.044 8.832.003 8.188c-.047-.73.455-.52 1.415-.354.677.118 2.3.261 4.308-.28a11.28 11.28 0 0 0 2.41-.956c-.058.197-.114.4-.17.61-.433 1.618-.827 4.055-.632 6.426-1.976.732-2.267 2.423-2.267 2.423l2.524-.715c.227 1.002.6 1.987 1.15 2.838a5.914 5.914 0 0 1-.171.049Zm-4.188-6.298c1.265-.333 1.363-1.631 1.363-1.631l-3.374.888s.745 1.076 2.01.743Z"/></svg></span><span class="nm">Playwright</span></div></li><li><div class="skill"><span class="ic"><svg class="ln" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h14M14 4l4 4-4 4M20 16H6M10 12l-4 4 4 4"/></svg></span><span class="nm">REST APIs</span></div></li><li><div class="skill"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12.043 23.968c.479-.004.953-.029 1.426-.094a11.805 11.805 0 003.146-.863 12.404 12.404 0 003.793-2.542 11.977 11.977 0 002.44-3.427 11.794 11.794 0 001.02-3.476c.149-1.16.135-2.346-.045-3.499a11.96 11.96 0 00-.793-2.788 11.197 11.197 0 00-.854-1.617c-1.168-1.837-2.861-3.314-4.81-4.3a12.835 12.835 0 00-2.172-.87h-.005c.119.063.24.132.345.201.12.074.239.146.351.225a8.93 8.93 0 011.559 1.33c1.063 1.145 1.797 2.548 2.218 4.041.284.982.434 1.998.495 3.017.044.743.044 1.491-.047 2.229-.149 1.27-.554 2.51-1.228 3.596a7.475 7.475 0 01-1.903 2.084c-1.244.928-2.877 1.482-4.436 1.114a3.916 3.916 0 01-.748-.258 4.692 4.692 0 01-.779-.45 6.08 6.08 0 01-1.244-1.105 6.507 6.507 0 01-1.049-1.747 7.366 7.366 0 01-.494-2.54c-.03-1.273.225-2.553.854-3.67a6.43 6.43 0 011.663-1.918c.225-.178.464-.333.704-.479l.016-.007a5.121 5.121 0 00-1.441-.12 4.963 4.963 0 00-1.228.24c-.359.12-.704.27-1.019.45a6.146 6.146 0 00-.733.494c-.211.18-.42.36-.615.555-1.123 1.153-1.768 2.682-2.022 4.256-.15.973-.15 1.96-.091 2.95.105 1.395.391 2.787.945 4.062a8.518 8.518 0 001.348 2.173 8.14 8.14 0 003.132 2.23 7.934 7.934 0 002.113.54c.074.015.149.015.209.015zm-2.934-.398a4.102 4.102 0 01-.45-.228 8.5 8.5 0 01-2.038-1.534c-1.094-1.137-1.827-2.566-2.247-4.08a15.184 15.184 0 01-.495-3.172 12.14 12.14 0 01.046-2.082c.135-1.257.495-2.501 1.124-3.58a6.889 6.889 0 011.783-2.053 6.23 6.23 0 011.633-.9 5.363 5.363 0 013.522-.045c.029 0 .029 0 .045.03.015.015.045.015.06.03.045.016.104.045.165.074.239.12.479.271.704.42a6.294 6.294 0 012.097 2.502c.42.914.615 1.934.631 2.938.014 1.079-.18 2.157-.645 3.146a6.42 6.42 0 01-2.638 2.832c.09.03.18.045.271.075.225.044.449.074.688.074 1.468.045 2.892-.66 3.94-1.647.195-.18.375-.375.54-.585.225-.27.435-.54.614-.823.239-.375.435-.75.614-1.154a8.112 8.112 0 00.509-1.664c.196-1.004.211-2.022.149-3.026-.135-2.022-.673-4.045-1.842-5.724a9.054 9.054 0 00-.555-.719 9.868 9.868 0 00-1.063-1.034 8.477 8.477 0 00-1.363-.915 9.927 9.927 0 00-1.692-.598l-.3-.06c-.209-.03-.42-.044-.634-.06a8.453 8.453 0 00-1.015.016c-.704.045-1.412.16-2.112.337C5.799 1.227 2.863 3.566 1.3 6.67A11.834 11.834 0 00.238 9.801a11.81 11.81 0 00-.104 3.775c.12 1.02.374 2.023.778 2.977.227.57.511 1.124.825 1.648 1.094 1.783 2.683 3.236 4.51 4.24.688.39 1.408.69 2.157.944.226.074.45.15.689.21z"/></svg></span><span class="nm">JSON</span></div></li><li><div class="skill"><span class="ic"><span class="ic-text">ST</span></span><span class="nm">ScalaTest</span></div></li><li><div class="skill"><span class="ic"><span class="ic-text">MK</span></span><span class="nm">Mockito</span></div></li></ul></div>
+      <div class="skill-group"><h3>Data and cloud</h3><ul class="skills-ul"><li><div class="skill"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M24 3.459c0 .646-.418 1.18-1.141 1.18-.723 0-1.142-.534-1.142-1.18 0-.647.419-1.18 1.142-1.18.723 0 1.141.533 1.141 1.18zm-.228 0c0-.533-.38-.951-.913-.951s-.913.38-.913.95c0 .533.38.952.913.952.57 0 .913-.419.913-.951zm-1.37-.533h.495c.266 0 .456.152.456.38 0 .153-.076.229-.19.305l.19.266v.038h-.266l-.19-.266h-.229v.266h-.266zm.495.228h-.229v.267h.229c.114 0 .152-.038.152-.114.038-.077-.038-.153-.152-.153zM7.602 12.4c.038-.151.076-.304.076-.456 0-.114-.038-.228-.038-.342-.114-.343-.304-.647-.646-.838l-4.87-2.777c-.685-.38-1.56-.152-1.94.533-.381.685-.153 1.56.532 1.94l2.701 1.56-2.701 1.56c-.685.38-.913 1.256-.533 1.94.38.685 1.256.914 1.94.533l4.832-2.777c.343-.267.571-.533.647-.876zm1.332 2.626c-.266-.038-.57.038-.837.19l-4.832 2.777c-.685.38-.913 1.256-.532 1.94.38.686 1.255.914 1.94.533l2.701-1.56v3.12c0 .8.647 1.408 1.446 1.408.799 0 1.407-.647 1.407-1.408v-5.592c0-.761-.57-1.37-1.293-1.408zm4.946-6.088c.266.038.57-.038.837-.19l4.832-2.777c.685-.38.913-1.256.532-1.94-.38-.686-1.255-.914-1.94-.533l-2.701 1.56V1.975c0-.799-.647-1.408-1.446-1.408-.799 0-1.446.609-1.446 1.408V7.53c0 .76.609 1.37 1.332 1.407zM3.265 5.97l4.832 2.777c.266.152.533.19.837.19.723-.038 1.331-.684 1.331-1.407V1.975c0-.799-.646-1.408-1.407-1.408-.799 0-1.446.647-1.446 1.408v3.12l-2.701-1.56c-.685-.38-1.56-.152-1.94.533-.419.646-.19 1.521.494 1.902zm9.093 6.011a.412.412 0 00-.114-.266l-.57-.571a.346.346 0 00-.267-.114.412.412 0 00-.266.114l-.571.57a.411.411 0 00-.114.267c0 .076.038.19.114.267l.57.57a.345.345 0 00.267.114c.076 0 .19-.038.266-.114l.571-.57a.412.412 0 00.114-.267zm1.598.533L11.94 14.53c-.039.038-.153.114-.229.114h-.608a.411.411 0 01-.267-.114L8.82 12.514a.408.408 0 01-.076-.229v-.608c0-.076.038-.19.114-.267l2.016-2.016a.41.41 0 01.267-.114h.608a.41.41 0 01.267.114l2.016 2.016a.347.347 0 01.114.267v.608c-.076.077-.114.19-.19.229zm5.593 5.44l-4.832-2.777c-.266-.152-.57-.19-.837-.152-.723.038-1.332.684-1.332 1.408v5.554c0 .8.647 1.408 1.408 1.408.799 0 1.446-.647 1.446-1.408v-3.12l2.7 1.56c.686.38 1.561.152 1.941-.533.419-.646.19-1.521-.494-1.94zm2.549-7.533l-2.701 1.56 2.7 1.56c.686.38.914 1.256.533 1.94-.38.685-1.255.913-1.94.533l-4.832-2.778a1.644 1.644 0 01-.647-.798c-.037-.153-.076-.305-.076-.457 0-.114.039-.228.039-.342.114-.343.342-.647.646-.837l4.832-2.778c.685-.38 1.56-.152 1.94.533.457.609.19 1.484-.494 1.864"/></svg></span><span class="nm">Snowflake</span></div></li><li><div class="skill"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M23.5594 14.7228a.5269.5269 0 0 0-.0563-.1191c-.139-.2632-.4768-.3418-1.0074-.2321-1.6533.3411-2.2935.1312-2.5256-.0191 1.342-2.0482 2.445-4.522 3.0411-6.8297.2714-1.0507.7982-3.5237.1222-4.7316a1.5641 1.5641 0 0 0-.1509-.235C21.6931.9086 19.8007.0248 17.5099.0005c-1.4947-.0158-2.7705.3461-3.1161.4794a9.449 9.449 0 0 0-.5159-.0816 8.044 8.044 0 0 0-1.3114-.1278c-1.1822-.0184-2.2038.2642-3.0498.8406-.8573-.3211-4.7888-1.645-7.2219.0788C.9359 2.1526.3086 3.8733.4302 6.3043c.0409.818.5069 3.334 1.2423 5.7436.4598 1.5065.9387 2.7019 1.4334 3.582.553.9942 1.1259 1.5933 1.7143 1.7895.4474.1491 1.1327.1441 1.8581-.7279.8012-.9635 1.5903-1.8258 1.9446-2.2069.4351.2355.9064.3625 1.39.3772a.0569.0569 0 0 0 .0004.0041 11.0312 11.0312 0 0 0-.2472.3054c-.3389.4302-.4094.5197-1.5002.7443-.3102.064-1.1344.2339-1.1464.8115-.0025.1224.0329.2309.0919.3268.2269.4231.9216.6097 1.015.6331 1.3345.3335 2.5044.092 3.3714-.6787-.017 2.231.0775 4.4174.3454 5.0874.2212.5529.7618 1.9045 2.4692 1.9043.2505 0 .5263-.0291.8296-.0941 1.7819-.3821 2.5557-1.1696 2.855-2.9059.1503-.8707.4016-2.8753.5388-4.1012.0169-.0703.0357-.1207.057-.1362.0007-.0005.0697-.0471.4272.0307a.3673.3673 0 0 0 .0443.0068l.2539.0223.0149.001c.8468.0384 1.9114-.1426 2.5312-.4308.6438-.2988 1.8057-1.0323 1.5951-1.6698zM2.371 11.8765c-.7435-2.4358-1.1779-4.8851-1.2123-5.5719-.1086-2.1714.4171-3.6829 1.5623-4.4927 1.8367-1.2986 4.8398-.5408 6.108-.13-.0032.0032-.0066.0061-.0098.0094-2.0238 2.044-1.9758 5.536-1.9708 5.7495-.0002.0823.0066.1989.0162.3593.0348.5873.0996 1.6804-.0735 2.9184-.1609 1.1504.1937 2.2764.9728 3.0892.0806.0841.1648.1631.2518.2374-.3468.3714-1.1004 1.1926-1.9025 2.1576-.5677.6825-.9597.5517-1.0886.5087-.3919-.1307-.813-.5871-1.2381-1.3223-.4796-.839-.9635-2.0317-1.4155-3.5126zm6.0072 5.0871c-.1711-.0428-.3271-.1132-.4322-.1772.0889-.0394.2374-.0902.4833-.1409 1.2833-.2641 1.4815-.4506 1.9143-1.0002.0992-.126.2116-.2687.3673-.4426a.3549.3549 0 0 0 .0737-.1298c.1708-.1513.2724-.1099.4369-.0417.156.0646.3078.26.3695.4752.0291.1016.0619.2945-.0452.4444-.9043 1.2658-2.2216 1.2494-3.1676 1.0128zm2.094-3.988-.0525.141c-.133.3566-.2567.6881-.3334 1.003-.6674-.0021-1.3168-.2872-1.8105-.8024-.6279-.6551-.9131-1.5664-.7825-2.5004.1828-1.3079.1153-2.4468.079-3.0586-.005-.0857-.0095-.1607-.0122-.2199.2957-.2621 1.6659-.9962 2.6429-.7724.4459.1022.7176.4057.8305.928.5846 2.7038.0774 3.8307-.3302 4.7363-.084.1866-.1633.3629-.2311.5454zm7.3637 4.5725c-.0169.1768-.0358.376-.0618.5959l-.146.4383a.3547.3547 0 0 0-.0182.1077c-.0059.4747-.054.6489-.115.8693-.0634.2292-.1353.4891-.1794 1.0575-.11 1.4143-.8782 2.2267-2.4172 2.5565-1.5155.3251-1.7843-.4968-2.0212-1.2217a6.5824 6.5824 0 0 0-.0769-.2266c-.2154-.5858-.1911-1.4119-.1574-2.5551.0165-.5612-.0249-1.9013-.3302-2.6462.0044-.2932.0106-.5909.019-.8918a.3529.3529 0 0 0-.0153-.1126 1.4927 1.4927 0 0 0-.0439-.208c-.1226-.4283-.4213-.7866-.7797-.9351-.1424-.059-.4038-.1672-.7178-.0869.067-.276.1831-.5875.309-.9249l.0529-.142c.0595-.16.134-.3257.213-.5012.4265-.9476 1.0106-2.2453.3766-5.1772-.2374-1.0981-1.0304-1.6343-2.2324-1.5098-.7207.0746-1.3799.3654-1.7088.5321a5.6716 5.6716 0 0 0-.1958.1041c.0918-1.1064.4386-3.1741 1.7357-4.4823a4.0306 4.0306 0 0 1 .3033-.276.3532.3532 0 0 0 .1447-.0644c.7524-.5706 1.6945-.8506 2.802-.8325.4091.0067.8017.0339 1.1742.081 1.939.3544 3.2439 1.4468 4.0359 2.3827.8143.9623 1.2552 1.9315 1.4312 2.4543-1.3232-.1346-2.2234.1268-2.6797.779-.9926 1.4189.543 4.1729 1.2811 5.4964.1353.2426.2522.4522.2889.5413.2403.5825.5515.9713.7787 1.2552.0696.087.1372.1714.1885.245-.4008.1155-1.1208.3825-1.0552 1.717-.0123.1563-.0423.4469-.0834.8148-.0461.2077-.0702.4603-.0994.7662zm.8905-1.6211c-.0405-.8316.2691-.9185.5967-1.0105a2.8566 2.8566 0 0 0 .135-.0406 1.202 1.202 0 0 0 .1342.103c.5703.3765 1.5823.4213 3.0068.1344-.2016.1769-.5189.3994-.9533.6011-.4098.1903-1.0957.333-1.7473.3636-.7197.0336-1.0859-.0807-1.1721-.151zm.5695-9.2712c-.0059.3508-.0542.6692-.1054 1.0017-.055.3576-.112.7274-.1264 1.1762-.0142.4368.0404.8909.0932 1.3301.1066.887.216 1.8003-.2075 2.7014a3.5272 3.5272 0 0 1-.1876-.3856c-.0527-.1276-.1669-.3326-.3251-.6162-.6156-1.1041-2.0574-3.6896-1.3193-4.7446.3795-.5427 1.3408-.5661 2.1781-.463zm.2284 7.0137a12.3762 12.3762 0 0 0-.0853-.1074l-.0355-.0444c.7262-1.1995.5842-2.3862.4578-3.4385-.0519-.4318-.1009-.8396-.0885-1.2226.0129-.4061.0666-.7543.1185-1.0911.0639-.415.1288-.8443.1109-1.3505.0134-.0531.0188-.1158.0118-.1902-.0457-.4855-.5999-1.938-1.7294-3.253-.6076-.7073-1.4896-1.4972-2.6889-2.0395.5251-.1066 1.2328-.2035 2.0244-.1859 2.0515.0456 3.6746.8135 4.8242 2.2824a.908.908 0 0 1 .0667.1002c.7231 1.3556-.2762 6.2751-2.9867 10.5405zm-8.8166-6.1162c-.025.1794-.3089.4225-.6211.4225a.5821.5821 0 0 1-.0809-.0056c-.1873-.026-.3765-.144-.5059-.3156-.0458-.0605-.1203-.178-.1055-.2844.0055-.0401.0261-.0985.0925-.1488.1182-.0894.3518-.1226.6096-.0867.3163.0441.6426.1938.6113.4186zm7.9305-.4114c.0111.0792-.049.201-.1531.3102-.0683.0717-.212.1961-.4079.2232a.5456.5456 0 0 1-.075.0052c-.2935 0-.5414-.2344-.5607-.3717-.024-.1765.2641-.3106.5611-.352.297-.0414.6111.0088.6356.1851z"/></svg></span><span class="nm">PostgreSQL</span></div></li><li><div class="skill"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M22.71 13.145c-1.66 2.092-3.452 4.483-7.038 4.483-3.203 0-4.397-2.825-4.48-5.12.701 1.484 2.073 2.685 4.214 2.63 4.117-.133 6.94-3.852 6.94-7.239 0-4.05-3.022-6.972-8.268-6.972-3.752 0-8.4 1.428-11.455 3.685C2.59 6.937 3.885 9.958 4.35 9.626c2.648-1.904 4.748-3.13 6.784-3.744C8.12 9.244.886 17.05 0 18.425c.1 1.261 1.66 4.648 2.424 4.648.232 0 .431-.133.664-.365a100.49 100.49 0 0 0 5.54-6.765c.222 3.104 1.748 6.898 6.014 6.898 3.819 0 7.604-2.756 9.33-8.965.2-.764-.73-1.361-1.261-.73zm-4.349-5.013c0 1.959-1.926 2.922-3.685 2.922-.941 0-1.664-.247-2.235-.568 1.051-1.592 2.092-3.225 3.21-4.973 1.972.334 2.71 1.43 2.71 2.619z"/></svg></span><span class="nm">Redis</span></div></li><li><div class="skill"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6.763 10.036c0 .296.032.535.088.71.064.176.144.368.256.576.04.063.056.127.056.183 0 .08-.048.16-.152.24l-.503.335a.383.383 0 0 1-.208.072c-.08 0-.16-.04-.239-.112a2.47 2.47 0 0 1-.287-.375 6.18 6.18 0 0 1-.248-.471c-.622.734-1.405 1.101-2.347 1.101-.67 0-1.205-.191-1.596-.574-.391-.384-.59-.894-.59-1.533 0-.678.239-1.23.726-1.644.487-.415 1.133-.623 1.955-.623.272 0 .551.024.846.064.296.04.6.104.918.176v-.583c0-.607-.127-1.03-.375-1.277-.255-.248-.686-.367-1.3-.367-.28 0-.568.031-.863.103-.295.072-.583.16-.862.272a2.287 2.287 0 0 1-.28.104.488.488 0 0 1-.127.023c-.112 0-.168-.08-.168-.247v-.391c0-.128.016-.224.056-.28a.597.597 0 0 1 .224-.167c.279-.144.614-.264 1.005-.36a4.84 4.84 0 0 1 1.246-.151c.95 0 1.644.216 2.091.647.439.43.662 1.085.662 1.963v2.586zm-3.24 1.214c.263 0 .534-.048.822-.144.287-.096.543-.271.758-.51.128-.152.224-.32.272-.512.047-.191.08-.423.08-.694v-.335a6.66 6.66 0 0 0-.735-.136 6.02 6.02 0 0 0-.75-.048c-.535 0-.926.104-1.19.32-.263.215-.39.518-.39.917 0 .375.095.655.295.846.191.2.47.296.838.296zm6.41.862c-.144 0-.24-.024-.304-.08-.064-.048-.12-.16-.168-.311L7.586 5.55a1.398 1.398 0 0 1-.072-.32c0-.128.064-.2.191-.2h.783c.151 0 .255.025.31.08.065.048.113.16.16.312l1.342 5.284 1.245-5.284c.04-.16.088-.264.151-.312a.549.549 0 0 1 .32-.08h.638c.152 0 .256.025.32.08.063.048.12.16.151.312l1.261 5.348 1.381-5.348c.048-.16.104-.264.16-.312a.52.52 0 0 1 .311-.08h.743c.127 0 .2.065.2.2 0 .04-.009.08-.017.128a1.137 1.137 0 0 1-.056.2l-1.923 6.17c-.048.16-.104.263-.168.311a.51.51 0 0 1-.303.08h-.687c-.151 0-.255-.024-.32-.08-.063-.056-.119-.16-.15-.32l-1.238-5.148-1.23 5.14c-.04.16-.087.264-.15.32-.065.056-.177.08-.32.08zm10.256.215c-.415 0-.83-.048-1.229-.143-.399-.096-.71-.2-.918-.32-.128-.071-.215-.151-.247-.223a.563.563 0 0 1-.048-.224v-.407c0-.167.064-.247.183-.247.048 0 .096.008.144.024.048.016.12.048.2.08.271.12.566.215.878.279.319.064.63.096.95.096.502 0 .894-.088 1.165-.264a.86.86 0 0 0 .415-.758.777.777 0 0 0-.215-.559c-.144-.151-.416-.287-.807-.415l-1.157-.36c-.583-.183-1.014-.454-1.277-.813a1.902 1.902 0 0 1-.4-1.158c0-.335.073-.63.216-.886.144-.255.335-.479.575-.654.24-.184.51-.32.83-.415.32-.096.655-.136 1.006-.136.175 0 .359.008.535.032.183.024.35.056.518.088.16.04.312.08.455.127.144.048.256.096.336.144a.69.69 0 0 1 .24.2.43.43 0 0 1 .071.263v.375c0 .168-.064.256-.184.256a.83.83 0 0 1-.303-.096 3.652 3.652 0 0 0-1.532-.311c-.455 0-.815.071-1.062.223-.248.152-.375.383-.375.71 0 .224.08.416.24.567.159.152.454.304.877.44l1.134.358c.574.184.99.44 1.237.767.247.327.367.702.367 1.117 0 .343-.072.655-.207.926-.144.272-.336.511-.583.703-.248.2-.543.343-.886.447-.36.111-.734.167-1.142.167zM21.698 16.207c-2.626 1.94-6.442 2.969-9.722 2.969-4.598 0-8.74-1.7-11.87-4.526-.247-.223-.024-.527.272-.351 3.384 1.963 7.559 3.153 11.877 3.153 2.914 0 6.114-.607 9.06-1.852.439-.2.814.287.383.607zM22.792 14.961c-.336-.43-2.22-.207-3.074-.103-.255.032-.295-.192-.063-.36 1.5-1.053 3.967-.75 4.254-.399.287.36-.08 2.826-1.485 4.007-.215.184-.423.088-.327-.151.32-.79 1.03-2.57.695-2.994z"/></svg></span><span class="nm">AWS</span></div></li><li><div class="skill"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4.9855 0c-.2941.0031-.5335.2466-.534.5482L4.446 5.456c0 .1451.06.2835.159.3891a.5322.5322 0 0 0 .3806.1562h3.4282l8.197 17.6805a.5365.5365 0 0 0 .4885.3181h5.811c.2969 0 .5426-.2448.5426-.5482V18.544c0-.3035-.2392-.5482-.5425-.5482h-2.0138L12.7394.3153C12.647.124 12.4564 0 12.2452 0h-7.254Zm.5397 1.0907h6.3678l8.16 17.6804a.5365.5365 0 0 0 .4885.3181h1.8178v3.8173H17.437L9.2402 5.226a.536.536 0 0 0-.4885-.318H5.5223Zm2.0137 8.2366c-.2098.0011-.3937.1193-.4857.3096L.6002 23.2133a.5506.5506 0 0 0 .0313.5282.5334.5334 0 0 0 .4544.25h6.169a.5468.5468 0 0 0 .497-.3096l3.38-7.166a.5405.5405 0 0 0-.0029-.4686L8.036 9.637a.5468.5468 0 0 0-.4942-.3096Zm.0057 1.8036 2.488 5.1522-3.1214 6.6206H1.9465Z"/></svg></span><span class="nm">Lambda</span></div></li><li><div class="skill"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6.429 17.571h10.714V6.857H6.429v10.714ZM18 6.857h1.714v.857H18V9.43h1.714v.857H18v1.285h1.714v.858H18v1.714h1.714V15H18v1.714h1.714v.857H18v.059a.8.8 0 0 1-.799.799h-.058v1.714h-.857v-1.714H14.57v1.714h-.857v-1.714H12.43v1.714h-.858v-1.714H9.857v1.714H9v-1.714H7.286v1.714h-.857v-1.714H6.37a.8.8 0 0 1-.799-.8v-.058H4.286v-.857H5.57V15H4.286v-.857H5.57v-1.714H4.286v-.858H5.57v-1.285H4.286v-.857H5.57V7.714H4.286v-.857H5.57V6.8a.8.8 0 0 1 .8-.799h.058V4.286h.857V6H9V4.286h.857V6h1.714V4.286h.858V6h1.285V4.286h.857V6h1.715V4.286h.857V6h.058a.8.8 0 0 1 .799.799v.058ZM12.429 23.09a.054.054 0 0 1-.054.053H.91a.053.053 0 0 1-.053-.053V11.625c0-.03.024-.054.053-.054h2.52v-.857H.91a.911.911 0 0 0-.91.91V23.09c0 .502.408.91.91.91h11.465a.91.91 0 0 0 .91-.91V21h-.856ZM24 .91v11.465a.91.91 0 0 1-.91.91h-2.52v-.856h2.519a.054.054 0 0 0 .053-.054V.91a.053.053 0 0 0-.053-.053H11.625a.053.053 0 0 0-.054.053v2.52h-.857V.91c0-.502.409-.91.91-.91H23.09a.91.91 0 0 1 .91.91Z"/></svg></span><span class="nm">EC2</span></div></li><li><div class="skill"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9.456 18.7h1.258v-.865H9.456Zm2.115 0h1.286v-.865h-1.286ZM6.43 1.127.857 3.892v17.19l5.572 1.885Zm.857 5.47v11.238H8.57v.865H7.286v4.868a.434.434 0 0 1-.429.432.425.425 0 0 1-.136-.022L.292 21.804a.432.432 0 0 1-.292-.41V3.623c0-.164.093-.315.24-.388L6.668.045a.424.424 0 0 1 .415.02.433.433 0 0 1 .203.367v5.3H8.57v.865ZM13.714 18.7H15v-.865h-1.286Zm.028-12.103H15v-.864h-1.258Zm-2.143 0h1.258v-.864H11.6Zm-2.143 0h1.258v-.864H9.456Zm13.687-2.705L17.57 1.127v21.84l5.572-1.884ZM24 21.394c0 .186-.117.35-.292.41l-6.429 2.174a.425.425 0 0 1-.386-.06.434.434 0 0 1-.179-.35V18.7h-.829v-.865h.83V6.597h-.83v-.864h.83v-5.3c0-.15.076-.289.202-.368a.424.424 0 0 1 .415-.02l6.428 3.19c.147.073.24.224.24.388ZM13.257 9.346l-.8-.31-2.143 5.618.8.31Zm2.903 2.744a.434.434 0 0 0 0-.612L14.446 9.75l-.606.612 1.411 1.423-1.411 1.423.606.611Zm-6.606 1.728L7.84 12.09a.434.434 0 0 1 0-.612L9.554 9.75l.606.612-1.411 1.423 1.411 1.423Z"/></svg></span><span class="nm">API Gateway</span></div></li><li><div class="skill"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.913 13.147l.12-.895c.947.576 1.258.922 1.354 1.071-.16.031-.562.046-1.474-.176zm-2.174 7.988a.547.547 0 0 0-.005.073c0 .084-.207.405-1.124.768a10.28 10.28 0 0 1-1.438.432c-1.405.325-3.128.504-4.853.504-4.612 0-7.412-1.184-7.412-1.704a.547.547 0 0 0-.005-.073L1.81 5.602c.135.078.28.154.432.227.042.02.086.038.128.057.134.062.272.122.417.18l.179.069c.154.058.314.114.478.168.043.013.084.029.13.043.207.065.423.127.646.187l.176.044c.175.044.353.087.534.127a23.414 23.414 0 0 0 .843.17l.121.023c.252.045.508.085.768.122.071.011.144.02.216.03.2.027.4.053.604.077l.24.027c.245.026.49.05.74.07l.081.009c.275.022.552.04.83.056l.233.012c.21.01.422.018.633.025a33.088 33.088 0 0 0 2.795-.026l.232-.011c.278-.016.555-.034.83-.056l.08-.008c.25-.02.497-.045.742-.072l.238-.026c.205-.024.408-.05.609-.077.07-.01.141-.019.211-.03.261-.037.519-.078.772-.122l.111-.02c.215-.04.427-.082.634-.125l.212-.047c.186-.041.368-.085.546-.13l.166-.042c.225-.06.444-.122.654-.189.04-.012.077-.026.115-.038a10.6 10.6 0 0 0 .493-.173c.058-.021.114-.044.17-.066.15-.06.293-.12.43-.185.038-.017.079-.034.116-.052.153-.073.3-.15.436-.228l-.976 7.245c-2.488-.78-5.805-2.292-7.311-3a1.09 1.09 0 0 0-1.088-1.085c-.6 0-1.088.489-1.088 1.088 0 .6.488 1.089 1.088 1.089.196 0 .378-.056.537-.148 1.72.812 5.144 2.367 7.715 3.15zm-7.42-20.047c5.677 0 9.676 1.759 9.75 2.736l-.014.113c-.01.033-.031.067-.048.101-.015.028-.026.057-.047.087-.024.033-.058.068-.09.102-.028.03-.051.06-.084.09-.038.035-.087.07-.133.105-.04.03-.074.06-.119.091-.053.036-.116.071-.177.107-.05.03-.095.06-.15.09-.068.036-.147.073-.222.11-.059.028-.114.057-.177.085-.084.038-.177.074-.268.111-.068.027-.13.054-.203.082-.097.036-.205.072-.31.107-.075.026-.148.053-.228.079-.111.035-.233.069-.35.103-.085.024-.165.05-.253.073-.124.034-.258.065-.389.098-.093.022-.181.046-.278.068-.139.032-.287.061-.433.091-.098.02-.191.041-.293.06-.155.03-.32.057-.482.084-.1.018-.198.036-.302.052-.166.026-.342.048-.515.072-.11.014-.213.03-.325.044-.181.023-.372.041-.56.06-.11.012-.218.025-.332.036-.188.016-.386.029-.58.043-.122.009-.24.02-.364.028-.207.012-.422.02-.635.028-.12.005-.234.012-.354.016a35.605 35.605 0 0 1-2.069 0c-.12-.004-.234-.011-.352-.016-.214-.008-.43-.016-.637-.028-.122-.008-.238-.02-.36-.027-.195-.015-.394-.028-.584-.044-.11-.01-.215-.024-.324-.035-.19-.02-.384-.038-.568-.06l-.315-.044c-.176-.024-.355-.046-.525-.073-.1-.015-.192-.033-.29-.05-.167-.028-.335-.055-.494-.086-.096-.018-.183-.038-.276-.056-.151-.032-.305-.062-.45-.095-.09-.02-.173-.043-.26-.064-.138-.034-.277-.067-.407-.102-.082-.022-.157-.046-.235-.069a11.75 11.75 0 0 1-.368-.108c-.075-.024-.141-.049-.213-.073-.11-.037-.223-.075-.325-.113-.067-.025-.125-.051-.188-.077-.096-.038-.195-.076-.282-.115-.06-.027-.11-.054-.166-.08-.08-.039-.162-.077-.233-.116-.052-.028-.094-.055-.142-.084-.063-.038-.13-.075-.185-.113-.043-.029-.075-.058-.113-.086-.048-.037-.098-.073-.139-.11-.032-.029-.054-.057-.08-.087-.033-.035-.069-.07-.093-.104-.02-.03-.031-.058-.046-.086-.018-.035-.039-.068-.049-.102l-.015-.113c.076-.977 4.074-2.736 9.748-2.736zm12.182 12.124c-.118-.628-.84-1.291-2.31-2.128l.963-7.16a.531.531 0 0 0 .005-.073C22.16 1.581 16.447 0 11.32 0 6.194 0 .482 1.581.482 3.851a.58.58 0 0 0 .005.072L2.819 21.25c.071 2.002 5.236 2.75 8.5 2.75 1.805 0 3.615-.188 5.098-.531.598-.138 1.133-.3 1.592-.48 1.18-.467 1.789-1.053 1.813-1.739l.945-7.018c.557.131 1.016.197 1.389.197.54 0 .902-.137 1.134-.413a.956.956 0 0 0 .21-.804Z"/></svg></span><span class="nm">S3</span></div></li><li><div class="skill"><span class="ic"><span class="ic-text">EMR</span></span><span class="nm">EMR</span></div></li><li><div class="skill"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M13.983 11.078h2.119a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.119a.185.185 0 00-.185.185v1.888c0 .102.083.185.185.185m-2.954-5.43h2.118a.186.186 0 00.186-.186V3.574a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.185m0 2.716h2.118a.187.187 0 00.186-.186V6.29a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.887c0 .102.082.185.185.186m-2.93 0h2.12a.186.186 0 00.184-.186V6.29a.185.185 0 00-.185-.185H8.1a.185.185 0 00-.185.185v1.887c0 .102.083.185.185.186m-2.964 0h2.119a.186.186 0 00.185-.186V6.29a.185.185 0 00-.185-.185H5.136a.186.186 0 00-.186.185v1.887c0 .102.084.185.186.186m5.893 2.715h2.118a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.185m-2.93 0h2.12a.185.185 0 00.184-.185V9.006a.185.185 0 00-.184-.186h-2.12a.185.185 0 00-.184.185v1.888c0 .102.083.185.185.185m-2.964 0h2.119a.185.185 0 00.185-.185V9.006a.185.185 0 00-.184-.186h-2.12a.186.186 0 00-.186.186v1.887c0 .102.084.185.186.185m-2.92 0h2.12a.185.185 0 00.184-.185V9.006a.185.185 0 00-.184-.186h-2.12a.185.185 0 00-.184.185v1.888c0 .102.082.185.185.185M23.763 9.89c-.065-.051-.672-.51-1.954-.51-.338.001-.676.03-1.01.087-.248-1.7-1.653-2.53-1.716-2.566l-.344-.199-.226.327c-.284.438-.49.922-.612 1.43-.23.97-.09 1.882.403 2.661-.595.332-1.55.413-1.744.42H.751a.751.751 0 00-.75.748 11.376 11.376 0 00.692 4.062c.545 1.428 1.355 2.48 2.41 3.124 1.18.723 3.1 1.137 5.275 1.137.983.003 1.963-.086 2.93-.266a12.248 12.248 0 003.823-1.389c.98-.567 1.86-1.288 2.61-2.136 1.252-1.418 1.998-2.997 2.553-4.4h.221c1.372 0 2.215-.549 2.68-1.009.309-.293.55-.65.707-1.046l.098-.288Z"/></svg></span><span class="nm">Docker</span></div></li><li><div class="skill"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12.098 3.01c-1.133.277-1.466.474-1.842 1.787.478-.962.84-1.315 1.842-1.787zm3.228.076c-.834-.053-1.715.177-2.756.615a3.97 3.97 0 00-1.199.76c-.31.287-.576.62-.866 1.006a1.312 1.312 0 00-.468.095 1.868 1.868 0 00-.539.356c-.141.124-.28.252-.416.383v.002c-.123.12-.244.241-.363.365-.945.152-1.72.32-2.41.588a6.314 6.314 0 00-1.97 1.217c-.252.222-.482.469-.687.736a5.435 5.435 0 00-.503.803c-.13.142-.26.288-.399.414a1.45 1.45 0 01-.441.285c-.093.035-.133.058-.137.056-.004-.001-.008-.033-.012-.047.235-.21.267-.55.289-.86.03.034.053.068.082.113.031.047.062.095.1.142l.158.2.055-.249c.046-.208.081-.484.027-.724-.034-.153-.117-.315-.235-.393l.036-.09c.04-.1.08-.204.115-.303l.069-.193-.204.035c-.27.047-.852.366-1.261.791-.152.158-.284.33-.37.514a.984.984 0 00-.093.59.91.91 0 00.272.498c.03.12.058.223.087.316.033.104.068.198.112.29.119.247.31.398.529.468.182.059.369.066.566.02a3.83 3.83 0 00-.072.69 8.911 8.911 0 00.07 1.394c.013.093.028.184.045.275l-.107.291-.166.455-.37.365-.343.34a9.22 9.22 0 01-.082.08c-.232.224-.279.27-.213.662.04.241.119.484.242.72.114.216.267.427.463.624.245.245.647.55 1.066.71.245.092.488.138.723.097l-.039.11a4.046 4.046 0 01-.123.3c-.285.624.008.95.463 1.158.227.104.497.173.748.238l.168.045c.298.08.812.228 1.281.258.513.033.974-.073 1.098-.533.049-.182.078-.322.09-.459a2.33 2.33 0 00-.01-.406c.144-.32.21-.423.316-.578l.053-.08c.115-.17.168-.29.188-.426.018-.131.004-.262-.02-.461l-.011-.084a6.822 6.822 0 001.338.05l-.118.061-.055.03c-.395.203-.413.587-.289.984.112.357.343.723.487.945.303.467.592.861.943 1.076.368.226.786.253 1.328-.04.276-.15.363-.302.48-.507.038-.066.08-.133.126-.204.101-.05.382-.296.67-.534l.296-.242c.073.053.164.09.27.115.14.034.305.05.504.065.149.01.635.01.949.01h.227c.324.001.585-.016.783-.128.21-.119.334-.331.361-.71a1.28 1.28 0 00-.008-.378.946.946 0 00-.136-.312l-.014-.502-.016-.521a2.372 2.372 0 00-.068-.536 3.558 3.558 0 00-.18-.505c-.053-.127-.096-.245-.138-.36a5.756 5.756 0 00-.229-.547l.018-.123.181.174.266.258c.203.196.39.373.607.502.226.133.479.21.807.195a1.925 1.925 0 001.016-.385c.293-.216.528-.509.627-.832l.084-.279.07-.225c.482.082.998.11 1.498.057a3.7 3.7 0 001.351-.389 3.406 3.406 0 001.35-1.33h.002v-.002c.355-.616.555-1.34.63-2.088.062-.599.028-1.415-.097-2.2-.11-.701-.295-1.38-.55-1.87a.736.736 0 00-.137-.178 1.413 1.413 0 00-.51-.31c-.206-.07-.422-.084-.594.006a.485.485 0 00-.123.09 2.793 2.793 0 00-.3.388c-.106.153-.21.307-.337.414-.149.128-.327.202-.502.272a3.454 3.454 0 00-.261-.508 4.81 4.81 0 00-.399-.54 2.21 2.21 0 00-.365-.349 5.357 5.357 0 00-.41-.275c-.407-.255-.754-.559-1.108-.87-.16-.14-.323-.282-.482-.413-.842-.695-1.628-1.031-2.469-1.084zm-4.129.004c-.57.137-.68.245-.851.804.273-.41.43-.545.851-.804zm3.952.465c.829-.001 1.587.303 2.431 1.013.412.347.774.684 1.192.983-.152.013-.283.04-.455.107.21-.04.451 0 .67.04.06.039.124.078.189.116.295.174.463.27.662.547.21.294.386.589.541.912-.101-.036-.186-.067-.262-.09a.566.566 0 00-.533.034l-.012.006c-.163.079-.416.17-.586.197a.7.7 0 00.405-.006.565.565 0 00-.018.539.269.269 0 01-.02-.12.228.228 0 01.249-.208.233.233 0 01.187.33c-.117.02-.233.055-.353.1a4.41 4.41 0 00-.237.095 3.722 3.722 0 011.084-.02c.025.117.05.24.073.366l-.137.01-.012.002c-.174-.14-.367-.117-.633-.057-.806.184-.617.637-.988 1.318.385-.47.357-.962.984-1.11.147-.036.247-.078.346-.063-.178.09-.333.237-.394.41-.173.486-.065.895-.254 1.35.234-.407.249-.802.459-1.23.075-.153.354-.4.525-.403l.14-.002c.042.27.068.539.052.761a8.535 8.535 0 01-.198 1.24c.213-.272.31-.85.403-1.257.097-.424.07-.934-.014-1.389-.117-.625.527-.522.9-.816.275-.217.463-.564.715-.809.25-.243.644.114.742.352.426 1.03.62 2.65.508 3.69-.126 1.164-.69 2.437-1.719 3.01-1.31.732-2.854.285-4.156-.154-.278-.093-.47-.229-.715-.382.067.3.097.615.008.914-.14.474-.367 1.251.277 1.394.246.055.357.048.704-.13a1.3 1.3 0 01-.616.011.397.397 0 01-.314-.273c.06.044.16.066.33.107.478.115.932-.114 1.021-.445.052-.194.043-.295.153-.559.099.03.202.059.306.084l-.177.578c-.154.501-.752.904-1.28.895-.488-.009-.797-.314-1.134-.613l-.678-.6a5.228 5.228 0 01-1.658-.834c.4.472.673.732 1.232.967-.081.83-.37 1.436-.615 2.23-.111.36-.991 1.8-1.234 1.94-.174.1-1.26 1.016-1.465 1.136-.153.203-.287.483-.516.604-.698.37-1.148-.339-1.523-.936-.171-.272-.645-1.054-.23-1.273.39-.208.61-.357 1.009-.62.059.108.159.212.225.32l-.043-.352a2.752 2.752 0 01-.008-.596c.016-.206.03-.413.047-.62-.06.21-.179.42-.239.63-.024.084-.045.152-.056.214a7.05 7.05 0 01-2.682.034 16.76 16.76 0 00-.185-.926c-.018.278-.007 1.047-.008 1.476-.001.333-.016.448-.188.731-.16.265-.228.325-.453.773.019.283.019.47-.057.739-.125.446-1.386.098-1.718.007-.41-.112-1.256-.278-1.043-.824.187-.48.307-.986.398-1.658-.75-1.08-1.448-2.56-1.582-3.873-.104-1.019-.04-1.646.18-2.27.35-.987.837-1.843 1.62-2.53C5.778 7.89 6.767 7.516 8.316 7.28c-.373.417-.741.858-1.143 1.33-.406.479-.648.963-.906 1.487-.357.722-.348.996.125 1.63.407.547.627.794.804 1.328-.146.303-.2.56-.25.973.5.545.87.918 1.354 1.033.475.113.872.093 1.297-.125.944-.482 1.816-1.107 2.88-1.132.493-1.211.444-2.222.208-3.393-.162-.8-.227-1.557-.278-2.373-.2.84-.236 1.577-.088 2.414.18 1.008.318 2.124-.18 3.01-.962.073-1.788.658-2.655 1.107-.35.18-.712.198-1.098.092-.358-.098-.6-.334-.986-.78-.006-.446.095-.653.3-1.058.33-.65.695-1.255 1.094-1.894-.49.59-.953 1.084-1.338 1.677-.147-.419-.358-.633-.707-1.105-.34-.461-.375-.662-.12-1.196.255-.536.472-1.008.907-1.478.753-.813 1.443-1.717 2.266-2.518.447-.434.628-.42 1.22-.51a20.768 20.768 0 001.606-.31 22.5 22.5 0 01-1.553.08h-.015c.506-.646.799-1.006 1.62-1.363.95-.412 1.738-.652 2.47-.652zm.556 2.79c-1.101.276-1.307.739-1.166 1.45.121-.535.335-1.05 1.166-1.45zm-3.263.061c-.446.05-.89.096-1.336.139-.375.035-.436.03-.702.293-.403.399-.794 1.768-.92 2.316.198-.455.69-1.729 1.069-2.053.105-.09.18-.143.258-.183-.271.455-.252.566-.157 1.176.081-.62.295-.859.647-1.32a9.287 9.287 0 001.14-.368zm10.226.053c-.255.517-.65.95-1.185 1.215-.288.142-.47.093-.791.062.326.094.533.21.853.096.652-.233.967-.756 1.123-1.373zm-2.28.834c.023.047.046.096.067.144a.602.602 0 00-.05.041.572.572 0 00-.126-.181l.11-.004zm-3.26.4c-.36.166-.779.126-1.087.334-.271.184-.646.764-.922 1.01.2-.078.394-.212.57-.354.002.22.101.426.27.565a.31.31 0 01.092-.492.312.312 0 01.432.191c-.148.11-.284.238-.397.387a1.666 1.666 0 00-.24.44 4.222 4.222 0 012.002-1.294c-.2-.003-.437.034-.678.114a.732.732 0 00-.482-.614c.16-.085.316-.175.44-.287zm-1.042 1.64a.735.735 0 01-.125-.083.35.35 0 00.125.084zM1.32 8.34c-.953.672-1.19.978-1.062 2.338C.352 9.608.56 9.145 1.32 8.34zm-.808.404c-.482.336-.545.475-.5 1.059.105-.482.203-.664.5-1.059zm1.779.195c-.07.15-.118.264-.152.381-.147.508.066.962-.395 1.33.217.438.207.612.711.41.195-.078.355-.187.498-.316-.07.18-.133.361-.191.545l-.03.094c-.36.153-.834.25-1.015-.13a3.458 3.458 0 01-.203-.595c-.594-.615.294-1.427.777-1.719zm.123.276c.123.071.156.2.17.375-.073-.074-.132-.122-.227-.112.008-.06.019-.119.034-.177.007-.03.014-.058.023-.086zm14.87 3.267c-.131.022-.365.07-.495.092-.348.059-.387.142-.441.484l-.086.524a9.16 9.16 0 01.228-.568c.084-.184.132-.202.31-.3.127-.068.357-.163.483-.232zm-14.47 2.4c.274.946.738 1.876 1.255 2.657v.014a.993.993 0 01-.149.369c-.369.493-1.306-.23-1.578-.508-.297-.303-.496-.662-.543-.998-.034-.246-.001-.252.17-.426l.693-.701.153-.406zm12.405.62c.056.183.101.364.183.558.138.326.205.526.215.875l.032 1.106c.117.206.136.249.115.484-.043.481-.203.513-.625.506-.192-.003-.957-.007-1.15-.023-.274-.024-.429-.05-.512-.112.43-.316 1.162-1.619 1.304-2.068.151-.474.315-.888.438-1.326z"/></svg></span><span class="nm">Hadoop</span></div></li><li><div class="skill"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10.812 0c-.425.013-.845.215-1.196.605a3.593 3.593 0 00-.493.722c-.355.667-.425 1.415-.556 2.143a551.9 551.9 0 00-.726 4.087c-.027.16-.096.227-.244.273C5.83 8.386 4.06 8.94 2.3 9.514c-.387.125-.773.289-1.114.506-1.042.665-1.196 1.753-.415 2.71.346.422.79.715 1.284.936 1.1.49 2.202.976 3.3 1.47.019.01.036.013.053.019h-.004l1.306.535c0 .023.002.045 0 .073-.2 2.03-.39 4.063-.58 6.095-.04.419-.012.831.134 1.23.317.87 1.065 1.148 1.881.701.372-.204.666-.497.937-.818 1.372-1.623 2.746-3.244 4.113-4.872.111-.133.205-.15.363-.098.349.117.697.231 1.045.347h.001c.02.012.045.02.073.03l.142.042c1.248.416 2.68.775 3.929 1.19.4.132.622.164 1.045.098.311-.048.592-.062.828-.236.602-.33.995-.957.988-1.682-.005-.427-.154-.813-.35-1.186-.82-1.556-1.637-3.113-2.461-4.666-.078-.148-.076-.243.037-.375 1.381-1.615 2.756-3.236 4.133-4.855.272-.32.513-.658.653-1.058.308-.878-.09-1.57-1-1.741a2.783 2.783 0 00-1.235.069c-1.974.521-3.947 1.041-5.918 1.57-.175.047-.26.015-.355-.144a353.08 353.08 0 00-2.421-4.018 4.61 4.61 0 00-.652-.849c-.371-.37-.802-.549-1.227-.536zm.172 3.703a.592.592 0 01.189.211c.87 1.446 1.742 2.89 2.609 4.338.07.118.135.16.277.121 1.525-.41 3.052-.813 4.579-1.217.367-.098.735-.193 1.103-.289a.399.399 0 01-.1.2c-1.259 1.48-2.516 2.962-3.779 4.438-.11.13-.12.22-.04.37.937 1.803 1.768 3.309 2.498 4.76l-3.696-1.019c-.538-.18-1.077-.358-1.615-.539-.163-.055-.25-.03-.36.1-1.248 1.488-2.504 2.97-3.759 4.454a.398.398 0 01-.18.132c.035-.378.068-.757.104-1.136.149-1.572.297-3.144.451-4.716-.03-.318.117-.405-.322-.545-1.493-.593-3.346-1.321-4.816-1.905a.595.595 0 01.24-.134c1.797-.57 3.595-1.14 5.394-1.705.127-.04.199-.092.211-.233.013-.148.05-.294.076-.441.241-1.363.483-2.726.726-4.088.068-.386.14-.771.21-1.157z"/></svg></span><span class="nm">Apache Spark</span></div></li></ul></div>
+      <div class="skill-group wide"><h3>Engineering practice</h3><ul class="skills-ul"><li><div class="skill"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M23.546 10.93L13.067.452c-.604-.603-1.582-.603-2.188 0L8.708 2.627l2.76 2.76c.645-.215 1.379-.07 1.889.441.516.515.658 1.258.438 1.9l2.658 2.66c.645-.223 1.387-.078 1.9.435.721.72.721 1.884 0 2.604-.719.719-1.881.719-2.6 0-.539-.541-.674-1.337-.404-1.996L12.86 8.955v6.525c.176.086.342.203.488.348.713.721.713 1.883 0 2.6-.719.721-1.889.721-2.609 0-.719-.719-.719-1.879 0-2.598.182-.18.387-.316.605-.406V8.835c-.217-.091-.424-.222-.6-.401-.545-.545-.676-1.342-.396-2.009L7.636 3.7.45 10.881c-.6.605-.6 1.584 0 2.189l10.48 10.477c.604.604 1.582.604 2.186 0l10.43-10.43c.605-.603.605-1.582 0-2.187"/></svg></span><span class="nm">Git</span></div></li><li><div class="skill"><span class="ic"><svg class="ln" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 0 1 13.7-5.6M20 4v4h-4M20 12a8 8 0 0 1-13.7 5.6M4 20v-4h4"/></svg></span><span class="nm">CI/CD</span></div></li><li><div class="skill"><span class="ic"><svg class="ln" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M8 12.3l2.8 2.8L16.3 9.4"/></svg></span><span class="nm">Automated testing</span></div></li><li><div class="skill"><span class="ic"><svg class="ln" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="8" height="11" rx="4"/><path d="M12 8V5M9 6l1.3 2M15 6l-1.3 2M8 12H4.5M16 12h3.5M8.5 16l-3 1.5M15.5 16l3 1.5M12 12v7"/></svg></span><span class="nm">Production debugging</span></div></li><li><div class="skill"><span class="ic"><svg class="ln" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="5" height="15" rx="1.3"/><rect x="9.5" y="4.5" width="5" height="9" rx="1.3"/><rect x="15.5" y="4.5" width="5" height="12" rx="1.3"/></svg></span><span class="nm">Agile and Scrum</span></div></li><li><div class="skill"><span class="ic"><svg class="ln" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 17V11a6 6 0 0 1 12 0v6l1.5 2h-15zM10 21h4"/></svg></span><span class="nm">On-call and releases</span></div></li></ul></div>
+    </div>
+  </div>
+</section>
 
-            old.classList.add('exit-up');
-            setTimeout(() => { old.classList.remove('active', 'exit-up'); }, 300);
+<section class="on-lake" id="about">
+  <div class="wave-top from-oat" aria-hidden="true"></div>
+  <div class="container about-grid">
+    <div class="about-copy">
+      <div class="eyebrow">About <span class="note">// 19.0760° N → 41.8781° N</span></div>
+      <h2>From Mumbai to Chicago, by way of a lot of broken builds.</h2>
+      <p>I grew up in Mumbai and moved to Chicago for a master's in computer science. I've wanted to be a software engineer since I was a kid, and I still learn the same way: take it apart, break it, and keep going until I know why.</p>
+      <p>At Accenture I owned a production pipeline and learned what reliable really means. At UIC I built the things nobody assigned me, <b>because I'd rather build the machine than maintain it.</b></p>
+    </div>
+    <div class="glance">
+      <div class="glance-h">At a glance</div>
+      <dl>
+        <div><dt>Based in</dt><dd>Chicago, IL</dd></div>
+        <div><dt>Education</dt><dd>M.S. Computer Science, UIC (May 2026)<br>B.E. Computer Engineering, University of Mumbai (2022)</dd></div>
+        <div><dt>Experience</dt><dd>Associate Software Engineer, Accenture (Nov 2022 to Jul 2024)</dd></div>
+        <div><dt>Focus</dt><dd>Backend and distributed systems, LLM orchestration</dd></div>
+        <div><dt>Looking for</dt><dd>Backend and distributed systems roles</dd></div>
+      </dl>
+    </div>
+  </div>
+</section>
 
-            next.style.transform = idx > current ? 'translateY(40px)' : 'translateY(-40px)';
-            next.style.opacity = '0';
-            setTimeout(() => {
-                next.classList.add('active');
-                next.style.transform = '';
-                next.style.opacity = '';
-                // Always reset to top so headers never get clipped / weird landings
-                next.scrollTop = 0;
-            }, 50);
+<section class="on-oat" id="timeline">
+  <div class="wave-top from-lake" aria-hidden="true"></div>
+  <div class="container">
+    <div class="eyebrow">Timeline <span class="note">// the pipe fills as you scroll</span></div>
+    <h2>The route so far.</h2>
+    <p class="section-intro">Education, internships, one production role, and what comes next.</p>
 
-            document.querySelectorAll('.sidebar-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
-            document.getElementById('progressFill').style.width = ((idx + 1) / pages.length * 100) + '%';
-            current = idx;
+    <div class="journey-layout">
+      <div class="pipe-col"><div class="pipe"><div class="pipe-fill" id="pipeFill"></div></div></div>
+      <div class="milestones" id="milestones">
+        <div class="milestone">
+          <span class="m-dot"></span>
+          <div class="m-yr">2018</div>
+          <h3>B.E., Computer Engineering</h3>
+          <div class="m-where">University of Mumbai · GPA 7.94/10 · Aug 2018 to May 2022</div>
+          <p>Started as an IEEE student volunteer (through Jul 2026), organizing technical events and workshops. Led a 15-member student team covering SAKEC Fest events for social media (2018 to 2020).</p>
+        </div>
+        <div class="milestone">
+          <span class="m-dot"></span>
+          <div class="m-yr">2019</div>
+          <h3>Web Development Intern</h3>
+          <div class="m-where">The Side Project Advertising · Mumbai · Nov to Dec 2019</div>
+          <p>Built and deployed the client's first digital platform, then maintained web features across browsers with the team.</p>
+        </div>
+        <div class="milestone">
+          <span class="m-dot"></span>
+          <div class="m-yr">2021</div>
+          <h3>Python Developer Intern</h3>
+          <div class="m-where">Trivia Softwares · Mumbai · Feb to Mar 2021</div>
+          <p>Built full-stack web and desktop applications in Python, Django and SQLite, with authentication and cookie-based session management.</p>
+        </div>
+        <div class="milestone">
+          <span class="m-dot"></span>
+          <div class="m-yr">2022</div>
+          <h3>Associate Software Engineer</h3>
+          <div class="m-where">Accenture · Nov 2022 to Jul 2024</div>
+          <p>Scaled backend systems to 30,000+ events an hour with middleware data pipelines out of Snowflake. Delivered API integrations for 30+ partners, owned production releases, and took part in on-call rotations.</p>
+        </div>
+        <div class="milestone">
+          <span class="m-dot"></span>
+          <div class="m-yr">2024</div>
+          <h3>M.S., Computer Science</h3>
+          <div class="m-where">University of Illinois Chicago · GPA 3.67/4.00 · Aug 2024 to May 2026</div>
+          <p>Graduate degree completed in May 2026.</p>
+        </div>
+        <div class="milestone">
+          <span class="m-dot"></span>
+          <div class="m-yr">Now</div>
+          <h3>Open to backend and distributed systems roles</h3>
+          <div class="m-where">Chicago, IL</div>
+          <p>Looking for a team building reliable platforms and AI workflows.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
-            setTimeout(() => {
-                animating = false;
-                onPageEnter(pages[idx]);
-                updateScrollHint();
-            }, 600);
+<section class="contact on-sky" id="reach">
+  <div class="wave-top from-oat" aria-hidden="true"></div>
+  <div class="container">
+    <div class="eyebrow">Contact</div>
+    <h2>Let's <i>talk.</i></h2>
+    <p class="sub">If you're hiring backend or distributed systems engineers, my inbox is open.</p>
+    <div class="flow-terminal">
+      <div class="ft-head"><span></span><span></span><span></span></div>
+      <div class="ft-row"><span class="ft-k">email</span><span class="ft-v">hetrnagda@gmail.com</span><button class="ft-copy" type="button" data-copy="hetrnagda@gmail.com">copy</button></div>
+      <div class="ft-row"><span class="ft-k">linkedin</span><span class="ft-v">linkedin.com/in/hetnagda20</span><button class="ft-copy" type="button" data-copy="linkedin.com/in/hetnagda20">copy</button></div>
+      <div class="ft-row"><span class="ft-k">github</span><span class="ft-v">github.com/HetNagda20</span><button class="ft-copy" type="button" data-copy="github.com/HetNagda20">copy</button></div>
+    </div>
+    <div class="contact-links">
+      <a class="btn btn-solid" href="https://www.linkedin.com/in/hetnagda20" target="_blank" rel="noopener">LinkedIn ↗</a>
+      <a class="btn" href="https://github.com/HetNagda20" target="_blank" rel="noopener">GitHub ↗</a>
+    </div>
+  </div>
+</section>
+
+<footer>HET NAGDA · CHICAGO, IL</footer>
+
+<script>
+(function(){
+  var reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---- hero background: a wave simulation that colours ripples ---- */
+  function HeroFX(){
+    var hero=document.getElementById('top'), cBg=document.getElementById('heroBg');
+    var gl=cBg.getContext('webgl',{antialias:false,alpha:false}); if(!gl){cBg.style.display='none';return;}
+    var VS='attribute vec2 a;varying vec2 v;void main(){v=vec2(a.x*.5+.5,.5-a.y*.5);gl_Position=vec4(a,0.,1.);}';
+    var FS='precision mediump float;varying vec2 v;uniform sampler2D uH;uniform vec2 uT;uniform vec3 uA,uB,uC,uP1,uP2,uP3;'+
+      'vec3 pal(float t){float f=fract(t);return f<.5?mix(uP1,uP2,f*2.):mix(uP2,uP3,(f-.5)*2.);}'+
+      'void main(){'+
+      'vec4 hs=texture2D(uH,v);'+
+      'float l=texture2D(uH,v-vec2(uT.x,0.)).r,r=texture2D(uH,v+vec2(uT.x,0.)).r,u=texture2D(uH,v-vec2(0.,uT.y)).r,d=texture2D(uH,v+vec2(0.,uT.y)).r;'+
+      'vec2 g=vec2(r-l,d-u);'+
+      'vec3 base=v.y<.55?mix(uA,uB,v.y/.55):mix(uB,uC,(v.y-.55)/.45);'+
+      'float k=clamp(length(g)*9.,0.,1.)*.35+hs.a*.16;'+
+      'vec3 irid=pal(hs.r*3.+(g.x-g.y)*6.+v.x*.5);'+
+      'vec3 col=mix(base,irid,clamp(k,0.,1.)*.5);'+
+      'float s=clamp(-(g.x+g.y)*8.,0.,1.);col+=s*s*.1;'+
+      'gl_FragColor=vec4(col,1.);}';
+    function sh(t,src){var o=gl.createShader(t);gl.shaderSource(o,src);gl.compileShader(o);return o;}
+    var pr=gl.createProgram(); gl.attachShader(pr,sh(gl.VERTEX_SHADER,VS)); gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,FS)); gl.linkProgram(pr);
+    if(!gl.getProgramParameter(pr,gl.LINK_STATUS)){cBg.style.display='none';return;}
+    gl.useProgram(pr);
+    var b=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,b);
+    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+    var loc=gl.getAttribLocation(pr,'a'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+    var tex=gl.createTexture(); gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D,tex);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+    function U(n){return gl.getUniformLocation(pr,n);}
+    gl.uniform1i(U('uH'),1);
+    var GW=240, GH=150, cur,prev,en,en2,la, vis=true, ready=false, lx=-1, ly=-1, nextRain=0;
+    function hex(c){c=(c||'').trim(); var n=parseInt(c.replace('#',''),16); return [(n>>16&255)/255,(n>>8&255)/255,(n&255)/255];}
+    function colors(){
+      var cs=getComputedStyle(hero), A=hex(cs.getPropertyValue('--hero-a')),B=hex(cs.getPropertyValue('--hero-b')),C=hex(cs.getPropertyValue('--hero-c'));
+      var F1=hex(cs.getPropertyValue('--fx-1')),F2=hex(cs.getPropertyValue('--fx-2')),F3=hex(cs.getPropertyValue('--fx-3'));
+      gl.uniform3f(U('uA'),A[0],A[1],A[2]); gl.uniform3f(U('uB'),B[0],B[1],B[2]); gl.uniform3f(U('uC'),C[0],C[1],C[2]);
+      gl.uniform3f(U('uP1'),F1[0],F1[1],F1[2]); gl.uniform3f(U('uP2'),F2[0],F2[1],F2[2]); gl.uniform3f(U('uP3'),F3[0],F3[1],F3[2]);
+    }
+    function layout(){
+      var hr=hero.getBoundingClientRect(), dpr=1;
+      if(hr.width<2||hr.height<2) return false;
+      GH=Math.max(60,Math.round(GW*hr.height/hr.width));
+      cur=new Float32Array(GW*GH); prev=new Float32Array(GW*GH); en=new Float32Array(GW*GH); en2=new Float32Array(GW*GH); la=new Uint8Array(GW*GH*2);
+      var cw=Math.max(2,Math.round(hr.width*dpr)), ch=Math.max(2,Math.round(hr.height*dpr));
+      cBg.width=cw; cBg.height=ch; gl.viewport(0,0,cw,ch);
+      gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D,tex); gl.pixelStorei(gl.UNPACK_ALIGNMENT,1);
+      gl.texImage2D(gl.TEXTURE_2D,0,gl.LUMINANCE_ALPHA,GW,GH,0,gl.LUMINANCE_ALPHA,gl.UNSIGNED_BYTE,la);
+      gl.uniform2f(U('uT'),1/GW,1/GH);
+      colors();
+      return true;
+    }
+    function drop(gx,gy,amp,rad){
+      var x0=Math.max(1,Math.floor(gx-rad)),x1=Math.min(GW-2,Math.ceil(gx+rad)),y0=Math.max(1,Math.floor(gy-rad)),y1=Math.min(GH-2,Math.ceil(gy+rad));
+      for(var y=y0;y<=y1;y++)for(var x=x0;x<=x1;x++){var d=Math.hypot(x-gx,y-gy); if(d<=rad) cur[y*GW+x]+=amp*.5*(1+Math.cos(Math.PI*d/rad));}
+    }
+    function step(){
+      var w=GW,h=GH;
+      for(var y=1;y<h-1;y++){var row=y*w;for(var x=1;x<w-1;x++){
+        var i=row+x;
+        prev[i]=((cur[i-1]+cur[i+1]+cur[i-w]+cur[i+w])*.5-prev[i])*.986;
+        var a=Math.abs(prev[i]), bl=(en[i-1]+en[i+1]+en[i-w]+en[i+w])*.25, e=(en[i]*.5+bl*.5)*.96;
+        en2[i]=a>e?a:e;
+      }}
+      var t=cur;cur=prev;prev=t; t=en;en=en2;en2=t;
+    }
+    function draw(now){
+      if(!ready){ready=layout(); if(!ready){requestAnimationFrame(draw);return;}}
+      if(vis){
+        if(now>nextRain){drop(GW*(.05+Math.random()*.9),GH*(.1+Math.random()*.85),.7,8);nextRain=now+2800+Math.random()*3200;}
+        step();
+        for(var i=0,n=GW*GH;i<n;i++){
+          var v=128+cur[i]*30; la[2*i]=v<0?0:(v>255?255:v);
+          var e=en[i]*255; la[2*i+1]=e>255?255:e;
         }
+        gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D,tex);
+        gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,GW,GH,gl.LUMINANCE_ALPHA,gl.UNSIGNED_BYTE,la);
+        gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+      }
+      requestAnimationFrame(draw);
+    }
+    function pos(e){var r=hero.getBoundingClientRect();return [(e.clientX-r.left)/r.width*GW,(e.clientY-r.top)/r.height*GH];}
+    hero.addEventListener('pointermove',function(e){
+      if(!ready) return;
+      var p=pos(e);
+      if(lx>=0){var sp=Math.min(Math.hypot(p[0]-lx,p[1]-ly),14); if(sp>.6) drop(p[0],p[1],.16+sp*.05,5);}
+      lx=p[0];ly=p[1];
+    });
+    hero.addEventListener('pointerleave',function(){lx=-1;});
+    hero.addEventListener('pointerdown',function(e){if(!ready)return;var p=pos(e);drop(p[0],p[1],2,9);});
+    new IntersectionObserver(function(es){vis=es[0].isIntersecting;},{threshold:0}).observe(hero);
+    addEventListener('resize',function(){ready=layout();});
+    setInterval(function(){if(ready)colors();},1000);
+    draw(0);
+  }
+  if(!reduced){ try{ HeroFX(); }catch(e){ var hb=document.getElementById('heroBg'); if(hb) hb.style.display='none'; } }
 
-        document.querySelectorAll('.sidebar-btn').forEach((btn, i) => {
-            btn.addEventListener('click', () => goTo(i));
-        });
+  /* ---- hero: a model of a system you can break ---- */
+  (function(){
+    var board=document.getElementById('cboard'), gNum=document.getElementById('gNum'), gBar=document.getElementById('gBar');
+    var cStatus=document.getElementById('cStatus'), cLesson=document.getElementById('cLesson'), box=document.getElementById('chaos');
+    var N={clients:{l:'Clients',s:'traffic',x:8,y:50},gw:{l:'Gateway',s:'entry',x:27,y:50},A:{l:'Service A',s:'stateless',x:49,y:24},B:{l:'Service B',s:'stateless',x:49,y:76},queue:{l:'Queue',s:'buffer',x:71,y:50},store:{l:'Store',s:'database',x:91,y:50}};
+    var E=[['clients','gw'],['gw','A'],['gw','B'],['A','queue'],['B','queue'],['queue','store']];
+    var down={}, els={}, edgeEls=[], pkts=[], rr=0, touched=false, shown=100, token=0;
+    var NS='http://www.w3.org/2000/svg';
+    var svg=document.createElementNS(NS,'svg'); svg.setAttribute('viewBox','0 0 100 100'); svg.setAttribute('preserveAspectRatio','none'); svg.setAttribute('aria-hidden','true');
+    E.forEach(function(e){var a=N[e[0]],b=N[e[1]],ln=document.createElementNS(NS,'line');ln.setAttribute('x1',a.x);ln.setAttribute('y1',a.y);ln.setAttribute('x2',b.x);ln.setAttribute('y2',b.y);ln.setAttribute('class','cedge');ln.dataset.a=e[0];ln.dataset.b=e[1];svg.appendChild(ln);edgeEls.push(ln);});
+    board.appendChild(svg);
+    Object.keys(N).forEach(function(k){
+      var n=N[k], el;
+      if(k==='clients'){ el=document.createElement('div'); }
+      else { el=document.createElement('button'); el.type='button'; el.setAttribute('aria-pressed','false'); el.setAttribute('aria-label','Pull the plug on '+n.l); el.addEventListener('click',function(){touched=true;toggle(k);}); }
+      el.className='cnode'; el.style.left=n.x+'%'; el.style.top=n.y+'%'; el.innerHTML='<b>'+n.l+'</b><i>'+n.s+'</i>';
+      board.appendChild(el); els[k]=el;
+    });
+    els.A.classList.add('hint');
+    document.getElementById('chaosReset').addEventListener('click',function(){touched=true;down={};sync(true);});
 
-        // keyboard navigation
-        document.addEventListener('keydown', e => {
-            if (e.key === 'ArrowDown' || e.key === 'ArrowRight') goTo(Math.min(current + 1, pages.length - 1));
-            if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') goTo(Math.max(current - 1, 0));
-        });
+    function outcome(){
+      var d=down, extra=Object.keys(d).filter(function(k){return d[k];}).length;
+      var more=extra>1?' ('+extra+' parts down)':'';
+      if(d.gw) return {pct:0,tone:'bad',status:'Gateway down'+more,lesson:'One entry point is one single point of failure. A second gateway would remove it.'};
+      if(d.A&&d.B) return {pct:0,tone:'bad',status:'No healthy service'+more,lesson:'Requests fail fast and the circuit breaker opens, so clients stop piling on a dead service.'};
+      if(d.queue) return {pct:70,tone:'warn',status:'Degraded'+more,lesson:'Writes back off and retry while reads keep working. The queue is the shock absorber, so losing it hurts.'};
+      if(d.store) return {pct:100,tone:'warn',status:'Buffering'+more,lesson:'The queue holds the events until the store returns. Producers never notice.'};
+      if(d.A||d.B) return {pct:100,dip:86,tone:'ok',status:'Failing over'+more,lesson:'Service '+(d.A?'B':'A')+' carries the load, and retries absorb the requests that were in flight.'};
+      return {pct:100,tone:'ok',status:'All healthy',lesson:'Click any box to pull its plug, and watch the system respond.'};
+    }
+    function setGauge(v){shown=v;gNum.textContent=Math.round(v)+'%';gBar.style.width=v+'%';}
+    function sync(instant){
+      Object.keys(els).forEach(function(k){if(k!=='clients'){var on=!!down[k];els[k].setAttribute('aria-pressed',on?'true':'false');els[k].setAttribute('aria-label',(on?'Restore ':'Pull the plug on ')+N[k].l);}});
+      edgeEls.forEach(function(e){e.classList.toggle('dead',!!(down[e.dataset.a]||down[e.dataset.b]));});
+      var o=outcome(), my=++token;
+      box.classList.remove('ok','warn','bad'); box.classList.add(o.tone);
+      cStatus.textContent=o.status; cLesson.textContent=o.lesson;
+      if(o.dip!==undefined && !instant && !reduced){ setGauge(o.dip); setTimeout(function(){if(my===token) setGauge(o.pct);},900); }
+      else setGauge(o.pct);
+    }
+    function toggle(k){
+      els.A.classList.remove('hint');
+      if(k==='clients') return;
+      down[k]=!down[k]; if(!down[k]) delete down[k];
+      sync(false);
+    }
 
-        // ── SCROLL & SWIPE NAVIGATION ────────────────────────────────────────
-        const EDGE = 40;          // px from edge = "at boundary"
-        const SWIPE_MIN = 60;     // min px swipe to trigger section change
-        let navCooldown = false;  // short cooldown to prevent double-firing
+    /* traffic */
+    function ctr(id){var n=N[id];return [n.x/100*board.clientWidth,n.y/100*board.clientHeight];}
+    function pathFor(){
+      var up=['A','B'].filter(function(k){return !down[k];}), p=['clients','gw'];
+      if(up.length){p.push(up[rr++%up.length],'queue','store');} else {p.push(rr++%2?'A':'B');}
+      return p;
+    }
+    function spawn(){
+      if(pkts.length>16) return;
+      var el=document.createElement('div'); el.className='cpk'; board.appendChild(el);
+      pkts.push({el:el,path:pathFor(),i:0,t:0,state:'go',life:0});
+    }
+    var lastT=0, acc=0, vis=true;
+    function frame(ts){
+      requestAnimationFrame(frame);
+      if(!vis||reduced){lastT=ts;return;}
+      var dt=Math.min((ts-lastT)/1000,.1); lastT=ts; acc+=dt;
+      if(acc>.55){acc=0;spawn();}
+      for(var q=pkts.length-1;q>=0;q--){
+        var p=pkts[q];
+        if(p.state==='go'){
+          p.t+=dt*1.5;
+          if(p.t>=1){
+            p.i++; p.t=0; var at=p.path[p.i];
+            if(down[at]){p.state='fail';p.el.classList.add('fail');}
+            else if(at==='queue'&&down.store){p.state='held';p.el.classList.add('held');}
+            else if(p.i>=p.path.length-1){p.state='done';}
+          }
+          if(p.state==='go'){
+            var a=ctr(p.path[p.i]),b=ctr(p.path[p.i+1]);
+            p.el.style.left=(a[0]+(b[0]-a[0])*p.t)+'px'; p.el.style.top=(a[1]+(b[1]-a[1])*p.t)+'px';
+          } else {var c=ctr(p.path[p.i]); p.el.style.left=c[0]+'px'; p.el.style.top=c[1]+'px';}
+        } else { p.life+=dt; p.el.style.opacity=Math.max(0,1-p.life/(p.state==='done'?.2:.7)); }
+        if(p.state!=='go' && p.life>(p.state==='done'?.2:.7)){p.el.remove();pkts.splice(q,1);}
+      }
+    }
+    if('IntersectionObserver' in window) new IntersectionObserver(function(es){vis=es[0].isIntersecting;},{threshold:0}).observe(box);
+    requestAnimationFrame(frame);
+    sync(true);
 
-        function getActivePage() {
-            return document.getElementById('page-' + pages[current]);
-        }
-        function atBottom(el) {
-            return el.scrollHeight - el.scrollTop - el.clientHeight <= EDGE;
-        }
-        function atTop(el) {
-            return el.scrollTop <= EDGE;
-        }
-        function tryNav(dir) {
-            if (animating || navCooldown) return;
-            navCooldown = true;
-            setTimeout(() => { navCooldown = false; }, 800);
-            if (dir > 0) goTo(Math.min(current + 1, pages.length - 1));
-            else goTo(Math.max(current - 1, 0));
-        }
+    /* one gentle demo so the page is never static */
+    if(!reduced){
+      setTimeout(function(){ if(touched) return; down.A=true; els.A.classList.remove('hint'); sync(false);
+        setTimeout(function(){ if(touched) return; delete down.A; sync(false); els.A.classList.add('hint'); },4600); },2600);
+    }
+  })();
 
-        // ── WHEEL / TRACKPAD ──
-        let wheelAcc = 0, wheelReset = null;
-        window.addEventListener('wheel', e => {
-            const el = getActivePage();
-            const down = e.deltaY > 0;
-            const up = e.deltaY < 0;
+  /* ---- projects: detail window ---- */
+  (function(){
+    var D={"teller": {"tag": "LLM agents · Reliability", "name": "Teller AI", "desc": "A computer-use framework built on the Claude API and Playwright. Claude drives a real browser to complete a goal once, and the run is saved as a typed, versioned capability. That capability then replays deterministically, with no model in the loop.", "tiles": [["50", "tests, all passing"], ["7", "agent actions"], ["4", "locator fallback tiers"], ["3", "replay outcomes"]], "bullets": ["<b>7 agent actions</b>, compiled into versioned artifacts with parameterized inputs and outputs", "<b>4-tier locator fallback</b>, text checkpoints, and 3-way replay outcomes", "<b>Allowlists, bounded retries</b>, commit verification and human handoff", "<b>Optional plain-English router</b>: a local Llama proposes the capability, a deterministic validator decides"], "chips": ["Python", "Claude API", "Playwright", "Ollama", "FastAPI"], "links": [["GitHub", "https://github.com/HetNagda20/TellerAI"]]}, "tok": {"tag": "Part 1 of 3 · Data pipeline", "name": "Tokenization Pipeline", "desc": "Three chained Hadoop MapReduce jobs turn a raw text corpus into BPE tokens, vector embeddings and each token’s nearest neighbor, then write the result to CSV. It runs against S3 on AWS EMR, or locally against Hadoop.", "tiles": [["3", "chained jobs"], ["6", "Hadoop configurations tested"], ["EMR", "deployed on AWS, S3 in and out"], ["CSV", "token, nearest token, similarity"]], "bullets": ["<b>Tokenization, embeddings, cosine similarity</b> as three separate jobs", "<b>CL100K_BASE BPE</b> through JTokkit, with ND4J embeddings and NaNs sanitized", "<b>A failed stage halts the chain</b>, so bad data never flows downstream", "<b>6 Hadoop configurations</b> validated with ScalaTest and Mockito"], "chips": ["Scala", "Hadoop", "AWS EMR", "JTokkit", "ND4J"], "links": [["GitHub", "https://github.com/HetNagda20/LLM-Tokenization-MapReduce"], ["EMR demo", "https://youtu.be/Enmy0wtqePo"]]}, "spark": {"tag": "Part 2 of 3 · Distributed training", "name": "LLM Spark Training", "desc": "Takes the token embeddings from Part 1, builds sliding-window datasets across Spark partitions, and trains a multi-layer network with parameter averaging. It produces a serialized model and a detailed training report.", "tiles": [["6", "ScalaTest cases"], ["4", "default window size"], ["EMR", "deployed on AWS"], ["Part 2", "of a 3-part series"]], "bullets": ["<b>Sliding-window datasets</b> generated across Spark partitions", "<b>SparkDl4jMultiLayer</b> training with parameter averaging", "<b>Training reports</b> covering loss, gradient stats and memory use", "<b>6 ScalaTest cases</b> for config, Spark session, model serialization and windowing"], "chips": ["Scala", "Apache Spark", "DeepLearning4J", "AWS EMR"], "links": [["GitHub", "https://github.com/HetNagda20/LLM-Spark-Training"]]}, "cross": {"tag": "Part 3 of 3 · Distributed LLM system", "name": "LLM Cross Talk", "desc": "A cloud-native system in Scala and Akka HTTP that orchestrates multi-turn conversations between a local Llama3 (via Ollama) and Claude on AWS Bedrock. Each request goes through an EC2 middleware layer, Protobuf over Base64, API Gateway and Lambda.", "tiles": [["3", "microservices"], ["2", "models taking turns"], ["Protobuf", "contract between services"], ["CSV", "per-turn timestamps and latency"]], "bullets": ["<b>Protobuf</b> between EC2 and Lambda, Base64-encoded through API Gateway", "<b>Multi-turn orchestration</b> of Llama3 and Claude up to a user-defined turn limit", "<b>Per-turn latency</b> and timestamps recorded, with each session exported to CSV"], "chips": ["Scala", "Akka HTTP", "AWS Lambda", "Bedrock", "Ollama"], "links": [["GitHub", "https://github.com/HetNagda20/LLM-Cross-Talk"]]}, "fair": {"tag": "Fairness · Big data", "name": "FairLend Miners", "desc": "An audit of discriminatory patterns in U.S. mortgage lending, using fairness-aware binning, association rule mining and clustering on 103,481 HMDA 2023 loan records from the Chicago area. A three-person team project. It is posted as an arXiv preprint (May 2026).", "tiles": [["103,481", "HMDA 2023 records"], ["9.63%", "bias from standard binning"], ["29.4%", "price of fairness at ε = 0.08"], ["67.2%", "DTI confidence, lift 2.81"], ["10 / 45", "cluster-group pairs flagged"], ["5", "behavioral clusters"]], "bullets": ["<b>My part:</b> the K-Means clustering and the Disparate Impact audit, with per-cluster ratios against the EEOC four-fifths threshold", "<b>Fairness-aware binning</b> compared with standard binning, at a 29.4% price of fairness (ε = 0.08)", "<b>FP-Growth</b> on denial patterns, then <b>PySpark K-Means</b> into 5 clusters", "<b>Preprint on arXiv</b>: “Auditing Discriminatory Patterns in Mortgage Lending Through Association Rules and Fair Binning”, with Archit Rathod and Dhwani Chande"], "chips": ["Python", "PySpark", "FP-Growth", "K-Means"], "links": [["GitHub", "https://github.com/HetNagda20/FairLend-Miners"], ["Paper", "https://arxiv.org/abs/2606.12435"]]}, "nutri": {"tag": "Visual data science", "name": "Cancer Nutrition Dashboard", "desc": "An interactive platform connecting diet, physical activity and BMI to cancer outcomes across the U.S. population. Built with React and D3 for UI Health as a client engagement through UIC’s Visual Data Science course.", "tiles": [["724", "patient records"], ["7", "linked views"], ["5", "normalized scores"], ["React", "18 with D3 v7"]], "bullets": ["<b>7 cross-filtered views</b>: click a state, a Sankey node or a patient and every chart updates", "<b>724 patient records</b> from NHANES, collapsed into five normalized 0 to 100 scores", "<b>Synthetic state assignment</b>, called out in the UI so it is never mistaken for real geography"], "chips": ["React 18", "D3.js", "d3-sankey", "TopoJSON"], "links": [["Live demo", "https://hetnagda20.github.io/Cancer-Nutrition-Analytics-Dashboard/"], ["GitHub", "https://github.com/HetNagda20/Cancer-Nutrition-Analytics-Dashboard"]]}, "harms": {"tag": "LLM evaluation", "name": "Allocation Harms in LLMs", "desc": "An evaluation of allocational harms in large language models using the RABBI metric from “The Mismeasure of Man and Models”. It benchmarks how models distribute beneficial outcomes across groups.", "tiles": [["3", "datasets"], ["2", "LLMs"], ["6", "benchmark runs"], ["RABBI", "allocation metric"]], "bullets": ["<b>3 datasets</b>: PISA 2022, COMPAS and DREsS", "<b>2 LLMs</b>: Llama-2-7b-chat-hf and StableLM-2-Zephyr-1.6B", "<b>6 benchmark runs</b> across the dataset and model grid"], "chips": ["Python", "Jupyter", "Llama-2", "StableLM-2"], "links": [["GitHub", "https://github.com/HetNagda20/Allocation-Harms-in-LLMs"], ["Paper", "https://arxiv.org/abs/2408.01285"]]}};
+    var modal=document.getElementById('modal'), win=document.getElementById('modalWin'), body=document.getElementById('mBody'), x=document.getElementById('modalX');
+    var opener=null;
+    function render(d){
+      var primary=true;
+      body.innerHTML='<span class="proj-tag">'+d.tag+'</span><h3 id="mTitle">'+d.name+'</h3><p class="m-desc">'+d.desc+'</p>'+
+        '<div class="tiles">'+d.tiles.map(function(t){return '<div class="tile"><b>'+t[0]+'</b><span>'+t[1]+'</span></div>';}).join('')+'</div>'+
+        '<p class="m-h">What it does</p><ul class="m-list">'+d.bullets.map(function(b){return '<li><span>'+b+'</span></li>';}).join('')+'</ul>'+
+        '<div class="m-chips">'+d.chips.map(function(c){return '<span class="chip">'+c+'</span>';}).join('')+'</div>'+
+        '<div class="m-links">'+d.links.map(function(l,i){return '<a class="mlink'+(i===0?' primary':'')+'" href="'+l[1]+'" target="_blank" rel="noopener">'+l[0]+' ↗</a>';}).join('')+'</div>';
+    }
+    function open(id,btn){
+      opener=btn; render(D[id]); modal.hidden=false; document.body.style.overflow='hidden'; win.scrollTop=0; x.focus();
+    }
+    function close(){
+      modal.hidden=true; document.body.style.overflow=''; if(opener) opener.focus();
+    }
+    document.querySelectorAll('.card-open').forEach(function(b){b.addEventListener('click',function(){open(b.dataset.id,b);});});
+    modal.addEventListener('click',function(e){if(e.target.hasAttribute('data-close')) close();});
+    x.addEventListener('click',close);
+    document.addEventListener('keydown',function(e){
+      if(modal.hidden) return;
+      if(e.key==='Escape'){e.preventDefault();close();return;}
+      if(e.key==='Tab'){
+        var f=[].slice.call(modal.querySelectorAll('button,a[href]')); if(!f.length) return;
+        var first=f[0], last=f[f.length-1];
+        if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+        else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+      }
+    });
+  })();
 
-            if (down && atBottom(el)) wheelAcc += Math.abs(e.deltaY);
-            else if (up && atTop(el)) wheelAcc += Math.abs(e.deltaY);
-            else { wheelAcc = 0; return; }
+  /* ---- timeline: the pipe fills to the latest milestone reached ---- */
+  var fill=document.getElementById('pipeFill');
+  var milestones=[].slice.call(document.querySelectorAll('.milestone'));
+  var lit=-1;
+  function setFill(){
+    if(lit<0) return;
+    fill.style.height=Math.max(0, milestones[lit].offsetTop+10)+'px';
+  }
+  if(fill && milestones.length){
+    var io=new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if(!entry.isIntersecting) return;
+        var idx=milestones.indexOf(entry.target);
+        entry.target.classList.add('lit');
+        if(idx>lit){lit=idx;setFill();}
+      });
+    },{threshold:.4,rootMargin:'0px 0px -10% 0px'});
+    milestones.forEach(function(m){io.observe(m);});
+    addEventListener('resize',setFill);
+  }
 
-            clearTimeout(wheelReset);
-            wheelReset = setTimeout(() => { wheelAcc = 0; }, 400);
-
-            const threshold = Math.abs(e.deltaY) > 80 ? 80 : 150;
-            if (wheelAcc >= threshold) {
-                wheelAcc = 0;
-                tryNav(down ? 1 : -1);
-            }
-        }, { passive: true });
-
-        // ── TOUCH SWIPE ──
-        let tStartY = 0, tStartX = 0, tScrollStart = 0, tDir = 0;
-
-        window.addEventListener('touchstart', e => {
-            tStartY = e.touches[0].clientY;
-            tStartX = e.touches[0].clientX;
-            tScrollStart = getActivePage().scrollTop;
-            tDir = 0;
-        }, { passive: true });
-
-        window.addEventListener('touchmove', e => {
-            const dx = e.touches[0].clientX - tStartX;
-            const dy = e.touches[0].clientY - tStartY;
-            if (Math.abs(dy) > Math.abs(dx)) tDir = dy < 0 ? 1 : -1;
-        }, { passive: true });
-
-        window.addEventListener('touchend', e => {
-            if (!tDir) return;
-            const el = getActivePage();
-            const dist = Math.abs(e.changedTouches[0].clientY - tStartY);
-            const pageScrolled = Math.abs(el.scrollTop - tScrollStart) > 8;
-
-            if (dist < SWIPE_MIN) return;
-
-            if (tDir > 0 && (atBottom(el) || !pageScrolled)) tryNav(1);
-            if (tDir < 0 && (atTop(el) || !pageScrolled)) tryNav(-1);
-        }, { passive: true });
-
-        // update scroll hint on internal page scroll
-        document.querySelectorAll('.page').forEach(page => {
-            page.addEventListener('scroll', () => { updateScrollHint(); });
-        });
-
-        // ── SCROLL HINT ───────────────────────────────────────────────────────
-        const hint = document.getElementById('scrollHint');
-        function updateScrollHint() {
-            const isLast = current === pages.length - 1;
-            hint.classList.toggle('hidden', isLast);
-
-            const el = getActivePage();
-            const atBot = atBottom(el);
-
-            // down arrow (default) vs up arrow (when at bottom)
-            hint.querySelector('polyline')
-                .setAttribute('points', atBot ? '2,7 5,3 8,7' : '2,3 5,7 8,3');
-        }
-        updateScrollHint();
-
-        // ── PAGE ENTER HOOKS ─────────────────────────────────────────────────
-        function onPageEnter(name) {
-            if (name === 'skills') {
-                drawRadar();
-                animateBars();
-            }
-            if (name === 'home') {
-                startTerminal();
-            }
-        }
-        document.getElementById('progressFill').style.width = (1 / pages.length * 100) + '%';
-
-        // ── TERMINAL ─────────────────────────────────────────────────────────
-        const tLines = [
-            { t: 'cmd', p: '~ $ ', tx: 'whoami' },
-            { t: 'out', tx: 'het nagda', cls: 'term-green' },
-            { t: 'cmd', p: '~ $ ', tx: 'cat role.txt' },
-            { t: 'out', tx: 'Software Engineer · Distributed Systems', cls: '' },
-            { t: 'cmd', p: '~ $ ', tx: 'echo $AVAILABLE' },
-            { t: 'out', tx: '✓  open · May 2026', cls: 'term-yellow' },
-            { t: 'cmd', p: '~ $ ', tx: '_', cursor: true },
-        ];
-        const tb = document.getElementById('termBody');
-        let tIdx = 0, cIdx = 0, tTimer = null;
-
-        function renderT(up) {
-            tb.innerHTML = '';
-            for (let i = 0; i < up; i++) {
-                const l = tLines[i]; const s = document.createElement('span');
-                s.className = 'term-out';
-                if (l.t === 'cmd') s.innerHTML = `<span class="term-prompt">${l.p}</span><span class="term-cmd">${l.tx}</span>`;
-                else s.innerHTML = `<span class="${l.cls || ''}">${l.tx}</span>`;
-                tb.appendChild(s);
-            }
-        }
-        function typeT() {
-            const l = tLines[tIdx]; if (!l) return;
-            if (l.cursor) { renderT(tIdx); return; }
-            renderT(tIdx);
-            const s = document.createElement('span'); s.className = 'term-out';
-            const partial = l.tx.slice(0, cIdx + 1);
-            if (l.t === 'cmd') s.innerHTML = `<span class="term-prompt">${l.p}</span><span class="term-cmd">${partial}</span><span class="term-cursor"></span>`;
-            else s.innerHTML = `<span class="${l.cls || ''}">${partial}</span><span class="term-cursor"></span>`;
-            tb.appendChild(s);
-            cIdx++;
-            if (cIdx < l.tx.length) { tTimer = setTimeout(typeT, l.t === 'cmd' ? 58 : 18); }
-            else { cIdx = 0; tIdx++; if (tIdx < tLines.length) tTimer = setTimeout(typeT, l.t === 'cmd' ? 420 : 160); }
-        }
-        function startTerminal() {
-            clearTimeout(tTimer);
-            tIdx = 0; cIdx = 0;
-            tb.innerHTML = '';
-            tTimer = setTimeout(typeT, 600);
-        }
-        startTerminal();
-
-        // ── D3 RADAR ─────────────────────────────────────────────────────────
-        const rdata = [
-            { axis: 'Backend', value: 0.92 }, { axis: 'Distributed', value: 0.88 },
-            { axis: 'Data Eng', value: 0.82 }, { axis: 'Frontend', value: 0.74 },
-            { axis: 'ML', value: 0.70 }, { axis: 'Cloud', value: 0.80 },
-        ];
-        let radarDrawn = false;
-        function drawRadar() {
-            if (radarDrawn) return; radarDrawn = true;
-            const el = document.getElementById('radarSvg');
-            const size = Math.min(el.parentElement.clientWidth, 380);
-            const mg = 64, r = (size - mg * 2) / 2, cx = size / 2, cy = size / 2;
-            const N = rdata.length, as = (Math.PI * 2) / N;
-            d3.select('#radarSvg').selectAll('*').remove();
-            const svg = d3.select('#radarSvg').attr('width', size).attr('height', size);
-
-            const defs = svg.append('defs');
-
-            const glowGrid = defs.append('filter').attr('id', 'glow-grid');
-            glowGrid.append('feGaussianBlur').attr('stdDeviation', '0.8').attr('result', 'blur');
-            const fmG = glowGrid.append('feMerge');
-            fmG.append('feMergeNode').attr('in', 'blur');
-            fmG.append('feMergeNode').attr('in', 'SourceGraphic');
-
-            const g = svg.append('g').attr('transform', `translate(${cx},${cy})`);
-
-            for (let lv = 1; lv <= 4; lv++) {
-                g.append('circle').attr('r', r * lv / 4)
-                    .attr('fill', 'none')
-                    .attr('stroke', lv === 4 ? '#4a2a18' : '#252520')
-                    .attr('stroke-width', lv === 4 ? 1.5 : 1)
-                    .attr('filter', lv === 4 ? 'url(#glow-grid)' : null);
-            }
-
-            rdata.forEach((_, i) => {
-                const a = as * i - Math.PI / 2;
-                g.append('line').attr('x1', 0).attr('y1', 0)
-                    .attr('x2', Math.cos(a) * r).attr('y2', Math.sin(a) * r)
-                    .attr('stroke', '#303028').attr('stroke-width', 1);
-            });
-
-            const pts = rdata.map((d, i) => {
-                const a = as * i - Math.PI / 2;
-                return [Math.cos(a) * r * d.value, Math.sin(a) * r * d.value];
-            });
-            const pd = pts.map((p, i) => (i === 0 ? 'M' : 'L') + p[0] + ',' + p[1]).join(' ') + 'Z';
-
-            g.append('path').attr('d', pd)
-                .attr('fill', '#FF6B2B').attr('fill-opacity', 0.18)
-                .attr('stroke', '#FF6B2B').attr('stroke-width', 2.5);
-
-            pts.forEach(p => {
-                g.append('circle').attr('cx', p[0]).attr('cy', p[1]).attr('r', 5)
-                    .attr('fill', '#FF6B2B');
-                g.append('circle').attr('cx', p[0]).attr('cy', p[1]).attr('r', 2.5)
-                    .attr('fill', '#FFD4BC');
-            });
-
-            rdata.forEach((d, i) => {
-                const a = as * i - Math.PI / 2;
-                const lx = Math.cos(a) * (r + 30), ly = Math.sin(a) * (r + 30);
-                g.append('text').attr('x', lx).attr('y', ly)
-                    .attr('text-anchor', 'middle').attr('dominant-baseline', 'middle')
-                    .attr('font-family', "'JetBrains Mono',monospace")
-                    .attr('font-size', '12px').attr('font-weight', '600')
-                    .attr('fill', '#f5f2ed')
-                    .text(d.axis);
-            });
-        }
-
-        function animateBars() {
-            document.querySelectorAll('.skill-bar-fill').forEach(bar => {
-                bar.style.width = bar.dataset.w + '%';
-            });
-        }
-
-        // ── PROJECT EXPAND ───────────────────────────────────────────────────
-        function toggleProj(i) {
-            var d = document.getElementById('detail-' + i);
-            d.classList.toggle('open');
-        }
-
-        document.addEventListener("DOMContentLoaded", () => {
-            (async function () {
-                const el = document.getElementById("hitCount");
-                if (!el) return;
-
-                const key = "viewCountV1";
-                const last = Number(localStorage.getItem(key) || 0);
-                const now = Date.now();
-                const twelveHours = 12 * 60 * 60 * 1000;
-
-                const endpoint = "https://api.countapi.xyz/hit/hetnagda20.github.io/visits";
-
-                try {
-                    // only count once per 12 hours per browser
-                    const res = (now - last > twelveHours)
-                        ? await fetch(endpoint, { cache: "no-store" })
-                        : await fetch(endpoint.replace("/hit/", "/get/"), { cache: "no-store" });
-
-                    const data = await res.json();
-                    el.textContent = Number(data.value).toLocaleString();
-
-                    if (now - last > twelveHours) localStorage.setItem(key, String(now));
-                } catch (e) {
-                    el.textContent = "—";
-                    console.error("view counter failed:", e);
-                }
-            })();
-        });
-
-
-        // ── EXPOSE GLOBALS ────────────────────────────────────────────────────
-        window.goTo = goTo;
-        window.toggleProj = toggleProj;
-    </script>
+  /* ---- copy to clipboard ---- */
+  document.querySelectorAll('.ft-copy').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var text=btn.dataset.copy, old=btn.textContent;
+      function done(){btn.textContent='copied'; setTimeout(function(){btn.textContent=old;},1400);}
+      function fallback(){
+        var r=document.createRange(), sel=getSelection();
+        r.selectNodeContents(btn.previousElementSibling);
+        sel.removeAllRanges(); sel.addRange(r);
+      }
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(done).catch(fallback);
+      } else fallback();
+    });
+  });
+})();
+</script>
 
 </body>
-
 </html>
